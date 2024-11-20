@@ -26,17 +26,27 @@ En esta práctica se trabajará sobre estos cuatro conceptos mediante la herrami
 ## Desarrollo
 
  1. **Cifrar y descifrar un mensaje mediante criptografía simétrica**
- 2. **Crear par de claves**
- 3. **Listar claves pública/privada**
- 4. **Importar/exportar claves publicas y privadas**
- 5. **Importar y exportar de un servidor de claves**
- 6. **Encriptar un documento con clave pública de destinatario**
- 7. **Desencriptar un documento cifrado con nuetra clave publica haciendo uso de clave privada**
- 8. **Firmar un mensaje y verificar la autoria de un mensaje**
- 9. **Mailevelope**
-    1.  Importar clave privada
-    2.  Subir clave pública al keyserver de mailevelope
-    3.  Importar claves publicas
-    4.  Enviar un mensaje cifrado y descifrar mensaje.
+ 1. **Crear par de claves**
+ 1. **Listar claves pública/privada**
+ 1. **Importar/exportar claves publicas y privadas**
+ 1. **Importar y exportar de un servidor de claves**
+ 1. **Encriptar un documento con clave pública de destinatario**
+ 1. **Desencriptar un documento cifrado con nuetra clave publica haciendo uso de clave privada**
+ 1. **Firmar un mensaje y verificar la autoria de un mensaje**
+ 2. **Itegridad y autoria de un documento/mensaje**
+     * Simula que alguien quiere manipular tu testamento. 
+      * Firma el documento testamento.txt sin cifrar --clear-sign
+      * Modifica el documento firmado y verifica 
+ 
+ 4.  **Mailevelope**
+      * Importar clave privada
+      *  Subir clave pública al keyserver de mailevelope
+      *  Importar claves publicas
+      *  Enviar un mensaje cifrado y descifrar mensaje.
+  
+  5. **Firma un documento encriptado y verifica**
+      * Firma el docuento testamento.txt pero está vez lo vas a encriptar para que únicamente lo pueda leer el compañero notario (importar clave secreta) 
+   1.  **Firma claves de compañeros para crear un circulo de confianza** 
+     * [Tutorial](https://gist.github.com/F21/b0e8c62c49dfab267ff1d0c6af39ab84)
 
  
