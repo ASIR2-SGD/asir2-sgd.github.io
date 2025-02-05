@@ -84,7 +84,7 @@ vagrant@lan:$ ping 192.168.82.100
 
 ### IPTABLES
 
-![iptables chains](../img/iptables-in-linux.webp)
+![iptables chains](https://raw.githubusercontent.com/ASIR2-SGD/asir2-sgd.github.io/refs/heads/main/img/iptables-in-linux.webp)
 ![iptables-chains](https://miro.medium.com/v2/resize:fit:720/format:webp/1*Vs4XnYTCI4fXYuGl2V3xfw.png)
 TODO
 
