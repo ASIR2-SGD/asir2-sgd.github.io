@@ -35,7 +35,7 @@ Añadimos las puertas de enlace necesarias para la práctica.
 ```bash
 vagrant@lan:$ sudo route add default gw 10.0.82.1
 vagrant@dmz:$ sudo route add default gw 10.0.200.1
-vagrant@fw:$ sudo route add default gw 10.0.200.1
+vagrant@fw:$ sudo route add default gw 192.168.82.100
 ```
 Estos cambios no añaden la ruta por defecto de forma permanente y se borra en cada reinicio. Deberemos añadirla en un nuevo fichero de netplan, ya que vagrant modifica le fichero _50-vagrant.yaml_ en cada reinicio
 ```bash
@@ -79,6 +79,7 @@ Probamos conectividad
 vagrant@lan:$ ping 10.0.82.1
 vagrant@lan:$ ping 10.0.200.100
 vagrant@lan:$ ping 192.168.82.100
+vagrant@lan:$ ping yahoo.es
 ```
 
 
@@ -88,17 +89,17 @@ vagrant@lan:$ ping 192.168.82.100
 ![iptables-chains](https://miro.medium.com/v2/resize:fit:720/format:webp/1*Vs4XnYTCI4fXYuGl2V3xfw.png)
 TODO
 
-iptables -t filter -L 
-iptables -t filter -L INPUT
-iptables -t nat -L
-iptables -t filter -P INPUT DROP
-iptables -F FORWARD
+* iptables -t filter -L 
+* iptables -t filter -L INPUT
+* iptables -t nat -L
+* iptables -t filter -P INPUT DROP
+* iptables -F FORWARD
 ```
 iptables -t nat -A POSTROUTING -o eth1 -j MASQUERADE
 ```
 *
 
-## Comprobación
+## Comprobación TODO
 * Probar conectividad del cliente mediante la utilidad _radtest_
 ```bash
 $radtest -x alumno 1 172.0.82.1 1812 aula82-network-password
