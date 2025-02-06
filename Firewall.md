@@ -95,7 +95,7 @@ TODO
 * iptables -t filter -P INPUT DROP
 * iptables -F FORWARD
 ```
-iptables -t nat -A POSTROUTING -o eth1 -j MASQUERADE
+iptables -t nat -A POSTROUTING -o eth3 -j MASQUERADE
 ```
 *
 
