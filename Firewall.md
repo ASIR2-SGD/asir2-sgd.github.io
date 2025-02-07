@@ -16,7 +16,7 @@ Los cortafuegos se utilizan con frecuencia para evitar que otros  usuarios de In
 
 ## Desarrollo
 
-### Virtualización del escenario
+### Preapración del escenario virtual del escenario
 
 Instalamos el paquete _iptables-persistent_
 ```bash
@@ -60,10 +60,15 @@ Ejecutamos _netplan try_ para verificar la sintaxis
 vagrant@lan:$ sudo netplan try
 ```
 
-Realizamos la misma operación en la máquina _dmz_ modificando la puerta de enlace.
+Realizamos la misma operación en la máquina _dmz_ y la máquina _ldap_ modificando la puerta de enlace.
 
 
-Activamos enrutamiento. Edita el fichero _/etc/sysctl.conf_ y descomenta la linea 28
+Activamos enrutamiento en el _firewall_
+De forma temporal mediante el comando
+```bash
+sysctl -w net.ipv4.ip_forward=1
+```
+Hacemos el cambio persistente editando el fichero _/etc/sysctl.conf_ y descomenta la linea 28
 
 ```bash
 vagrant@fw:$ sudo vi /etc/sysctl.conf
@@ -77,37 +82,101 @@ Probamos conectividad
 
 ```bash
 vagrant@lan:$ ping 10.0.82.1
+vagrant@lan:$ ping 10.0.82.200
 vagrant@lan:$ ping 10.0.200.100
 vagrant@lan:$ ping 192.168.82.100
 vagrant@lan:$ ping yahoo.es
 ```
 
 
-### IPTABLES
-
-![iptables chains](https://raw.githubusercontent.com/ASIR2-SGD/asir2-sgd.github.io/refs/heads/main/img/iptables-in-linux.webp)
-![iptables-chains](https://miro.medium.com/v2/resize:fit:720/format:webp/1*Vs4XnYTCI4fXYuGl2V3xfw.png)
-TODO
-
-* iptables -t filter -L 
-* iptables -t filter -L INPUT
-* iptables -t nat -L
-* iptables -t filter -P INPUT DROP
-* iptables -F FORWARD
+Para navegar en la internet, necesitamos utilizar una ip pública, para ello activaremosa traducción de direcciones privadas a públicas (NAT) en el cortafuegos
 ```
 iptables -t nat -A POSTROUTING -o eth3 -j MASQUERADE
 ```
-*
 
-## Comprobación TODO
-* Probar conectividad del cliente mediante la utilidad _radtest_
-```bash
-$radtest -x alumno 1 172.0.82.1 1812 aula82-network-password
-```
+### Arquitectura IP-Tables
 
-* Probar conectividad desde el AP
+![iptables chains](https://raw.githubusercontent.com/ASIR2-SGD/asir2-sgd.github.io/refs/heads/main/img/iptables-in-linux.webp)
+![iptables-chains](https://miro.medium.com/v2/resize:fit:720/format:webp/1*Vs4XnYTCI4fXYuGl2V3xfw.png)
+
+## Firewall
+- [ ] Permitir el tráfico desde el interfaz loopback
+- [ ] No se permitirá ninguna conexión entrante al cortafuegos exceptuando ssh desde nuestro ordenador anfitrión y el ordenador del profesor 192.168.82.100
+- [ ] 
+- [ ] DS
+- [ ] D
+- [ ] SD
+- [ ] SD
+- [ ] 
+TODO: Desarrollar las reglas
+TODO: Realizar diagrama de red
+
+
+## Anexo I. Comados IP-Tables
+1. Lista la tabla filter(por defecto)
+	```bash
+	iptables -L
+	```
+2. Lista la cadena INPUT de la tabla filter
+	```bash
+	iptables -t filter -L INPUT
+	```
+3. Lista la tabla nat
+	```bash
+	iptables -t nat -L
+	```
+4. Aplica la política por defetco DROP a la cadena INPUT de la tabla _filter_
+	```bash
+	iptables -t filter -P INPUT DROP
+	```
+5. Borra(flush) las reglas de la cadena FORWARD de la tabla filter(por defecto)
+	```bash
+	iptables -F FORWARD
+	```
+6. NAT Maquerade
+	```bash
+	iptables -t nat -A POSTROUTING -o eth1 -j MASQUERADE
+	```
+
+7. sd
+	```bash
+	iptables -t nat -A POSTROUTING -o eth1 -j MASQUERADE
+	```
+8. ds
+	```bash
+	iptables -t nat -A POSTROUTING -o eth1 -j MASQUERADE
+	```
+9. s
+	```bash
+	iptables -t nat -A POSTROUTING -o eth1 -j MASQUERADE
+	```
+10. sd
+	```bash
+	iptables -t nat -A POSTROUTING -o eth1 -j MASQUERADE
+	```
+11. sd
+	```bash
+	iptables -t nat -A POSTROUTING -o eth1 -j MASQUERADE
+	```
+12. sd
+	```bash
+	iptables -t nat -A POSTROUTING -o eth1 -j MASQUERADE
+	```
+
 
 
 >[!NOTE]
 > A realizar por el alumno
 
+>[!TIP]
+>dsd
+
+>[!IMPORTANT]
+>dsd
+
+>[!WARNING]
+>kjkñl
+
+
+>[!CAUTION]
+>kjkñl
