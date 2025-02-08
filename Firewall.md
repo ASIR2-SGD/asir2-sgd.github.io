@@ -6,6 +6,7 @@ Los cortafuegos se utilizan con frecuencia para evitar que otros  usuarios de In
 
 ## Links
 * [iptables-essentials](https://www.digitalocean.com/community/tutorials/iptables-essentials-common-firewall-rules-and-commands)
+* [# How To Implement a Basic Firewall Template with Iptables on Ubuntu 20.04](https://www.digitalocean.com/community/tutorials/how-to-implement-a-basic-firewall-template-with-iptables-on-ubuntu-20-04)
 * [iptables, un manual sencillo](https://fp.josedomingo.org/seguridadgs/u03/iptables.html)
 
 ## Objetivos
@@ -94,76 +95,121 @@ Para navegar en la internet, necesitamos utilizar una ip pública, para ello act
 iptables -t nat -A POSTROUTING -o eth3 -j MASQUERADE
 ```
 
+
 ### Arquitectura IP-Tables
 
 ![iptables chains](https://raw.githubusercontent.com/ASIR2-SGD/asir2-sgd.github.io/refs/heads/main/img/iptables-in-linux.webp)
 ![iptables-chains](https://miro.medium.com/v2/resize:fit:720/format:webp/1*Vs4XnYTCI4fXYuGl2V3xfw.png)
 
-## Firewall
+## Firewall - Reglas
 - [ ] Permitir el tráfico desde el interfaz loopback
-- [ ] No se permitirá ninguna conexión entrante al cortafuegos exceptuando ssh desde nuestro ordenador anfitrión y el ordenador del profesor 192.168.82.100
-- [ ] 
-- [ ] DS
-- [ ] D
-- [ ] SD
-- [ ] SD
-- [ ] 
-TODO: Desarrollar las reglas
-TODO: Realizar diagrama de red
+- [ ] No se permite el trafico entrante (dirigido a) ni saliente (generado por) del cortafuegos, exceptuando el tráfico _ssh_ proveniente desde nuestr ordenador anfitrión y el ordenador del profesor 192.168.82.100
+- [ ] No se permite el tráfico de la red _dmz_ a la red _lan_ exceptuando el tráfico _ldap_ dirigido a al servidor _ldap_.
+- [ ] No se permite el tráfico saliente (generado por) de la red _dmz_ exceptuando el mencionado en el apartado anterior
+- [ ] Se permite el tráfico al exterior (wan) generando en la red _lan_, exceptuando el tráfico proveniente del servidor _ldap_
+- [ ] Se permite el tráfico http/s del exterior dirigido a la _dmz_
+- [ ] Las peticiones provenientes del exterior al puerto 80/443 (http/s) serán redirigidas al servidor web de la _dmz_
 
+>[!CAUTION]
+>La conexión _ssh_ al _fw_ se realiza desde una ip de la red 10.0.2.0/24. Utiliza el comando _netstat -atunp_ para conocer la ip exacta y permitir estas conexiónes únicamente desde esa ip.
 
-## Anexo I. Comados IP-Tables
-1. Lista la tabla filter(por defecto)
+>[!Tip]
+>Se metódico y cuidadoso a la hora de establecer las reglas. Crea un fichero (script) bien documentado con a medida que vas añadiendolas. Comprueba el efecto de cada una y ejecuta los _tests_ de regresión para verificar que las reglas añadidas no rompen el estado anterior.
+
+>[!Tip]
+>Si en algún momento deseas que tu máquina tenga acceso a internet, puedes hacerlo de forma temporal agregando la linea ```route add default gw 10.0.2.2``` . Recuerda eliminarla finalizado el uso de internet para no alterar el funcionamiento de la práctica. Usa el comando ```route del default gw 10.0.2.2```
+## Anexo I. Comados
+### Netfilter
+1. Borrado de reglas
+	```bash
+	netfilter-persistent flush
+	```
+2. Carga las reglas del fichero _/etc/iptables/rules.v4_
+	```bash
+	netfilter-persistent reload
+	```
+3. Guarda las reglas en el fichero _/etc/iptables/rules.v4_
+	```bash
+	netfilter-persistent save
+	```
+### IP-Tables
+4. Lista la tabla filter(por defecto)
 	```bash
 	iptables -L
 	```
-2. Lista la cadena INPUT de la tabla filter
+5. Lista la cadena INPUT de la tabla filter
 	```bash
 	iptables -t filter -L INPUT
 	```
-3. Lista la tabla nat
+6. Lista la tabla nat
 	```bash
 	iptables -t nat -L
 	```
-4. Aplica la política por defetco DROP a la cadena INPUT de la tabla _filter_
+7. Aplica la política por defetco DROP a la cadena INPUT de la tabla _filter_
 	```bash
 	iptables -t filter -P INPUT DROP
 	```
-5. Borra(flush) las reglas de la cadena FORWARD de la tabla filter(por defecto)
+8. Borra(flush) las reglas de la cadena FORWARD de la tabla filter(por defecto)
 	```bash
 	iptables -F FORWARD
 	```
-6. NAT Maquerade
+9. NAT Maquerade
 	```bash
 	iptables -t nat -A POSTROUTING -o eth1 -j MASQUERADE
 	```
 
-7. sd
+10. Aceptamos tráfico originado en el loobpack local, tráfico del servidor, destinado al servidor
 	```bash
-	iptables -t nat -A POSTROUTING -o eth1 -j MASQUERADE
+	iptables -A INPUT -i lo -j ACCEPT
 	```
-8. ds
+11. Aceptamos tráfico (respuesta) parte de una conexion ya establecida iniciada en el servidor
+>[!NOTE]
+> Esta regla utiliza el módulo _conntrack_ que permite a _iptables_ obtener el contexto necesario para evaluar paquetes que forman parte de una conexión 
+
+>[!NOTE]
+> TCP es un protocolo basado en conexión, por lo que una conexión ESTABLISHED esta bien definida. UDP es un protocolo no orientado a conexión, por lo que ESTABLISHED hace referencia a tráfico que ha tenido una respuesta y viceversa.
+
 	```bash
-	iptables -t nat -A POSTROUTING -o eth1 -j MASQUERADE
-	```
-9. s
-	```bash
-	iptables -t nat -A POSTROUTING -o eth1 -j MASQUERADE
-	```
-10. sd
-	```bash
-	iptables -t nat -A POSTROUTING -o eth1 -j MASQUERADE
-	```
-11. sd
-	```bash
-	iptables -t nat -A POSTROUTING -o eth1 -j MASQUERADE
-	```
-12. sd
-	```bash
-	iptables -t nat -A POSTROUTING -o eth1 -j MASQUERADE
+	iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 	```
 
-
+13. Denegamos tráfico _inválido_ a causa de una conexión, un interfaz o un puerto no existente.
+	```bash
+	iptables -A INPUT -m conntrack --ctstate INVALID -j DROP
+	```
+14. Rechazamos el tráfico ICMP devolviendo un mensaje de error
+	```bash
+	iptables -A INPUT -p icmp -j REJECT --reject-with icmp-port-unreachable
+	```
+15. Rechazamos el tráfico proveniente de una red o ip
+	```bash
+	iptables -A INPUT -s 203.0.113.51 -j DROP
+	iptables -A INPUT -s 203.0.113.0/24 -j DROP
+	```
+16. Rechazamos el tráfico proveniente de una red y un interfaz de red
+	```bash
+	iptables -A INPUT -i eth0 -s 203.0.113.51 -j DROP
+	```
+17. Permitimos el tráfico SSH de entrada de una red específica o Ip
+	```bash
+	iptables -A INPUT -p tcp -s 203.0.113.0/24 --dport 22 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
+	
+	
+	```
+18. Permitimos el tráfico HTTP/S atraviese el firewall
+```bash
+	iptables -A FORWARD -p tcp -m multiport --dports 80,443 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
+	iptables -A FORWARD -p tcp -s 203.0.113.0/24 -m multiport --dports 80,443 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT		
+```
+19. Permitimos el tráfico de la red interna a la red externa (asumiendo _eth0_ es la red interna y _eth1_ la externa)
+	```bash
+	sudo iptables -A FORWARD -i eth1 -o eth0 -j ACCEPT
+	```
+20. Cambia la dirección ip de destino (DNAT)
+	```bash
+	iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 80 -j DNAT --to-destination 192.168.1.2:80
+```
+  
 
 >[!NOTE]
 > A realizar por el alumno
