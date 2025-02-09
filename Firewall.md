@@ -95,13 +95,11 @@ Para navegar en la internet, necesitamos utilizar una ip pública, para ello act
 iptables -t nat -A POSTROUTING -o eth3 -j MASQUERADE
 ```
 
+>[!NOTE]
+> El alumno deberá implementar el resto de reglas según se detalla en el siguiente apartado y se muTCP es un protocolo basado en conexión, por lo que una conexión ESTABLISHED esta bien definida. UDP es un protocolo no orientado a conexión, por lo que ESTABLISHED hace referencia a tráfico que ha tenido una respuesta y viceversa.
 
-### Arquitectura IP-Tables
-
-![iptables chains](https://raw.githubusercontent.com/ASIR2-SGD/asir2-sgd.github.io/refs/heads/main/img/iptables-in-linux.webp)
-![iptables-chains](https://miro.medium.com/v2/resize:fit:720/format:webp/1*Vs4XnYTCI4fXYuGl2V3xfw.png)
-
-## Firewall - Reglas
+### Firewall - Reglas
+![network_diagram](https://github.com/ASIR2-SGD/asir2-sgd.github.io/blob/main/img/network_diagram.png?raw=true)
 - [ ] Permitir el tráfico desde el interfaz loopback
 - [ ] No se permite el trafico entrante (dirigido a) ni saliente (generado por) del cortafuegos, exceptuando el tráfico _ssh_ proveniente desde nuestr ordenador anfitrión y el ordenador del profesor 192.168.82.100
 - [ ] No se permite el tráfico de la red _dmz_ a la red _lan_ exceptuando el tráfico _ldap_ dirigido a al servidor _ldap_.
@@ -118,7 +116,29 @@ iptables -t nat -A POSTROUTING -o eth3 -j MASQUERADE
 
 >[!Tip]
 >Si en algún momento deseas que tu máquina tenga acceso a internet, puedes hacerlo de forma temporal agregando la linea ```route add default gw 10.0.2.2``` . Recuerda eliminarla finalizado el uso de internet para no alterar el funcionamiento de la práctica. Usa el comando ```route del default gw 10.0.2.2```
-## Anexo I. Comados
+
+### Redireccionamiento de puertos y apache2 ldap authentication.
+
+En nuestra zona DMZ ubicaremos un servidor web, en el cual ciertas páginas estarán protegidas y únicamente se permitira el acceso a los usuarios autenticados. La autenticación se llevara a cabo mediante el servidor _ldap_ que hay en la _lan_, alcanzable a través de las reglas del firewall.
+Para llevara a cabo la autenticación deberemos utilizar el módulo de apache [_mod_authnz_ldap_](http://www.yolinux.com/TUTORIALS/LinuxTutorialApacheAddingLoginSiteProtection.html#LDAP). Otros recursos donde explica como llevar a cabo la autenticación son:
+* [How to Setup Apache Authentication using LDAP Active Directory](https://cloudinfrastructureservices.co.uk/how-to-setup-apache-authentication-using-ldap-active-directory/)
+* [Apache with LDAP authentication](https://medium.com/@uri.tau/apache-and-ldap-cc7bff1f629d)
+
+>[!NOTE]
+>Nuestro servidor web, ubicado en la máquina _dmz_ deber responder con un dialogo de autenticación a la url:: ``` ip:/sad_secure``` 
+## Anexo I. Arquitectura IP-Tables
+
+![iptables chains](https://raw.githubusercontent.com/ASIR2-SGD/asir2-sgd.github.io/refs/heads/main/img/iptables-in-linux.webp)
+
+
+![iptables-chains](https://miro.medium.com/v2/resize:fit:720/format:webp/1*Vs4XnYTCI4fXYuGl2V3xfw.png)
+
+**Contrack**: Seguimiento de paquetes
+![iptables_conntrack_2](https://github.com/ASIR2-SGD/asir2-sgd.github.io/blob/main/img/iptables_conntrack_2.png?raw=true)
+
+
+![iptables_conntrack_3](https://github.com/ASIR2-SGD/asir2-sgd.github.io/blob/main/img/iptables_conntrack_3.png?raw=true)
+## Anexo II. Comados
 ### Netfilter
 1. Borrado de reglas
 	```bash
