@@ -6,7 +6,7 @@ Los cortafuegos se utilizan con frecuencia para evitar que otros  usuarios de In
 
 ## Links
 * [iptables-essentials](https://www.digitalocean.com/community/tutorials/iptables-essentials-common-firewall-rules-and-commands)
-* [# How To Implement a Basic Firewall Template with Iptables on Ubuntu 20.04](https://www.digitalocean.com/community/tutorials/how-to-implement-a-basic-firewall-template-with-iptables-on-ubuntu-20-04)
+* [How To Implement a Basic Firewall Template with Iptables on Ubuntu 20.04](https://www.digitalocean.com/community/tutorials/how-to-implement-a-basic-firewall-template-with-iptables-on-ubuntu-20-04)
 * [iptables, un manual sencillo](https://fp.josedomingo.org/seguridadgs/u03/iptables.html)
 
 ## Objetivos
@@ -101,7 +101,7 @@ iptables -t nat -A POSTROUTING -o eth3 -j MASQUERADE
 ### Firewall - Reglas
 ![network_diagram](https://github.com/ASIR2-SGD/asir2-sgd.github.io/blob/main/img/network_diagram.png?raw=true)
 - [ ] Permitir el tráfico desde el interfaz loopback
-- [ ] No se permite el trafico entrante (dirigido a) ni saliente (generado por) del cortafuegos, exceptuando el tráfico _ssh_ proveniente desde nuestr ordenador anfitrión y el ordenador del profesor 192.168.82.100
+- [ ] No se permite el trafico entrante (dirigido a) ni saliente (generado por) del cortafuegos, exceptuando el tráfico _ssh_ proveniente desde nuestr ordenador anfitrión y el ordenador del profesor 192.168.82.101
 - [ ] No se permite el tráfico de la red _dmz_ a la red _lan_ exceptuando el tráfico _ldap_ dirigido a al servidor _ldap_.
 - [ ] No se permite el tráfico saliente (generado por) de la red _dmz_ exceptuando el mencionado en el apartado anterior
 - [ ] Se permite el tráfico al exterior (wan) generando en la red _lan_, exceptuando el tráfico proveniente del servidor _ldap_
