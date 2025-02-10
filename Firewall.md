@@ -31,6 +31,9 @@ vagrant@lan sudo route del default gw 10.0.2.2
 vagrant@fw sudo route del default gw 10.0.2.2
 vagrant@dmz sudo route del default gw 10.0.2.2
 ```
+Para eliminar la puerta de enlace nat de forma permanente, debemos crear un script que se ejecute en cada arranque
+
+
 Añadimos las puertas de enlace necesarias para la práctica.
 
 ```bash
@@ -163,6 +166,7 @@ vagrant@lan:$ ping yahoo.es
 - [ ] No se permite el trafico entrante (dirigido a) ni saliente (generado por) del cortafuegos, exceptuando el tráfico _ssh_ proveniente desde nuestr ordenador anfitrión y el ordenador del profesor 192.168.82.101
 - [ ] No se permite el tráfico de la red _dmz_ a la red _lan_ exceptuando el tráfico _ldap_ dirigido a al servidor _ldap_.
 - [ ] No se permite el tráfico saliente (generado por) de la red _dmz_ exceptuando el mencionado en el apartado anterior
+- [ ] Se permite el tráfico de la red lan a la red dmz
 - [ ] Se permite el tráfico al exterior (wan) generando en la red _lan_, exceptuando el tráfico proveniente del servidor _ldap_
 - [ ] Se permite el tráfico http/s del exterior dirigido a la _dmz_
 - [ ] Las peticiones provenientes del exterior al puerto 80/443 (http/s) serán redirigidas al servidor web de la _dmz_
@@ -289,7 +293,7 @@ TCP es un protocolo basado en conexión, por lo que una conexión ESTABLISHED es
 	sudo iptables -A FORWARD -i eth1 -o eth0 -j ACCEPT
 	```
 20. Cambia la dirección ip de destino (DNAT)
-	```bash
+```bash
 	iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 80 -j DNAT --to-destination 192.168.1.2:80
 ```
 
@@ -303,45 +307,65 @@ vagrant@fw:$sudo iptables -A OUTPUT -o lo -j ACCEPT
 - [x] No se permite el trafico entrante (dirigido a) ni saliente (generado por) del cortafuegos, exceptuando el tráfico _ssh_ proveniente desde nuestr ordenador anfitrión y el ordenador del profesor 192.168.82.101
 
 ```bash
-vagrant@fw:$sudo iptables -A INPUT -p tcp -s 10.0.2.15 --dport 22 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
-vagrant@fw:$sudo iptables -A OUTPUT -p tcp -d 10.0.2.15 --sport 22 -m conntrack --ctstate ESTABLISHED -j ACCEPT
+vagrant@fw:$sudo iptables -A INPUT -p tcp -s 10.0.2.2 --dport 22 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
+vagrant@fw:$sudo iptables -A OUTPUT -p tcp -d 10.0.2.2 --sport 22 -m conntrack --ctstate ESTABLISHED -j ACCEPT
 
 vagrant@fw:$sudo iptables -A INPUT -p tcp -s 192.168.82.101 --dport 22 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
 vagrant@fw:$sudo iptables -A OUTPUT -p tcp -d 192.168.82.101 --sport 22 -m conntrack --ctstate ESTABLISHED -j ACCEPT
-
+```
+- [x] Aplicamos una política restrictiva
+```bash
 vagrant@fw:$sudo iptables -t filter -P INPUT DROP
 vagrant@fw:$sudo iptables -t filter -P OUTPUT DROP
+```
 
+- [x] Permitir tráfico desde la interfaz loopback
+```bash
 vagrant@fw:$sudo iptables -A INPUT -i lo -j ACCEPT
 vagrant@fw:$sudo iptables -A OUTPUT -o lo -j ACCEPT
 ```
+
+- [x] Aplicar una política restrictiva a la cadena FORWARD y abrir los puertos necesarios
+```bash
+iptables -t filter -P FORWARD DROP
+```
+
+- [x] No se permite el tráfico del servidor ldap a la red dmz exceptuando el establecido (iniciado en dmz)
+```bash
+iptables -A FORWARD -i eth1 -o eth2  -s 10.0.82.200 -d 10.0.200.0/24 -m conntrack --ctstate NEW -j DROP
+```
+
 - [x] No se permite el tráfico de la red _dmz_ a la red _lan_ exceptuando el tráfico _ldap_ dirigido a al servidor _ldap_.
 
 ```bash
-vagrant@fw:$sudo iptables -A FORWARD -i eth2 -o eth1 -p udp -d 10.0.82.200 --dport 349 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
-vagrant@fw:$sudo iptables -A FORWARD -i eth1 -o eth2 -p udp -s 10.0.82.200 --sport 349 -m conntrack --ctstate ESTABLISHED -j ACCEPT
+iptables -A FORWARD -i eth2 -o eth1 -p udp -d 10.0.82.200 --dport 389 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
+iptables -A FORWARD -i eth1 -o eth2 -p udp -s 10.0.82.200 --sport 389 -m conntrack --ctstate ESTABLISHED -j ACCEPT
+iptables -A FORWARD -i eth2 -o eth1 -p tcp -d 10.0.82.200 --dport 389 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
+iptables -A FORWARD -i eth1 -o eth2 -p tcp -s 10.0.82.200 --sport 389 -m conntrack --ctstate ESTABLISHED -j ACCEP
 ```
 - [x] No se permite el tráfico saliente (generado por) de la red _dmz_ exceptuando el mencionado en el apartado anterior
 
+
+- [x] Se permite el tráfico de la red lan a la red dmz
 ```bash
-vagrant@fw:$sudo iptables -A FORWARD -i eth2 -o eth3  -p tcp -m conntrack --ctstate ESTABLISHED -j ACCEPT
-vagrant@fw:$sudo iptables -A FORWARD -i eth3 -o eth2  -p tcp -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
+vagrant@fw:$sudo iptables -A FORWARD -i eth1 -o eth2  -s 10.0.82.0/24 -d 10.0.200.0/24 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
+vagrant@fw:$sudo iptables -A FORWARD -i eth2 -o eth1  -s 10.0.200.0/24 -d 10.0.82.0/24 -m conntrack --ctstate ESTABLISHED -j ACCEPT
 ```
+
 - [x] Se permite el tráfico al exterior (wan) generando en la red _lan_, exceptuando el tráfico proveniente del servidor _ldap_
 ```bash
-vagrant@fw:$sudo iptables -A FORWARD -i eth3 -o eth1  -p tcp -d !10.0.82.200 -m conntrack --ctstate ESTABLISHED -j ACCEPT
-vagrant@fw:$sudo iptables -A FORWARD -i eth1 -o eth3  -p tcp -s !10.0.82.200 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
+vagrant@fw:$sudo iptables -A FORWARD -i eth3 -o eth1  ! -d 10.0.82.200 -m conntrack --ctstate ESTABLISHED -j ACCEPT
+vagrant@fw:$sudo iptables -A FORWARD -i eth1 -o eth3  ! -s 10.0.82.200 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
 ```
 - [x] Se permite el tráfico http/s del exterior dirigido a la _dmz_
 ```bash
 vagrant@fw:$sudo iptables -A FORWARD -i eth3 -o eth2 -p tcp -m multiport --dports 80,443 -d 10.0.200.100 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
-vagrant@fw:$sudo iptables -A FORWARD -i eth2 -o eth3 -p tcp -m multiport --dports 80,443 -s 10.0.200.100 -m conntrack --ctstate ESTABLISHED -j ACCEPT
+vagrant@fw:$sudo iptables -A FORWARD -i eth2 -o eth3 -p tcp -m multiport --sports 80,443 -s 10.0.200.100 -m conntrack --ctstate ESTABLISHED -j ACCEPT
 ```
 - [x] Las peticiones provenientes del exterior al puerto 80/443 (http/s) serán redirigidas al servidor web de la _dmz_
 ```bash
-vagrant@fw:$sudo iptables -t nat -A PREROUTING -i ethe -p tcp -m --dport 80 -j DNAT --to-destination 10.0.200.100:80
-vagrant@fw:$sudo iptables -t nat -A PREROUTING -i ethe -p tcp -m --dport 443 -j DNAT --to-destination 10.0.200.100:443
-vagrant@fw:$sudo iptables -t filter -P FORWARD DROP
+vagrant@fw:$sudo iptables -t nat -A PREROUTING -i eth3 -p tcp --dport 80 -j DNAT --to-destination 10.0.200.100:80
+vagrant@fw:$sudo iptables -t nat -A PREROUTING -i eth3 -p tcp --dport 443 -j DNAT --to-destination 10.0.200.100:443
 ```
 
 >[!NOTE]
