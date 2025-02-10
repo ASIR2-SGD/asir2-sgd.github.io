@@ -292,9 +292,9 @@ TCP es un protocolo basado en conexión, por lo que una conexión ESTABLISHED es
 	```bash
 	iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 80 -j DNAT --to-destination 192.168.1.2:80
 ```
-  
 
 ## Anexo III. Firewall - Reglas - soluciones
+
 - [x] Permitir el tráfico desde el interfaz loopback
 ```bash
 vagrant@fw:$sudo iptables -A INPUT -i lo -j ACCEPT
