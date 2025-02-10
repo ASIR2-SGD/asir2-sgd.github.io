@@ -60,26 +60,87 @@ Ejecutamos _netplan try_ para verificar la sintaxis
 ```bash
 vagrant@lan:$ sudo netplan try
 ```
+Aplicamos los cambios
+```bash
+vagrant@lan:$ sudo netplan apply
+```
+Realizamos la misma operación en las máquinas _fw_,_dmz_ y _ldap_ modificando la puerta de enlace y el interfaz en caso del _fw_
 
-Realizamos la misma operación en la máquina _dmz_ y la máquina _ldap_ modificando la puerta de enlace.
+```bash
+vagrant@fw:$ sudo vi /etc/netplan/60-routes.yaml
+```
 
+```bash
+---
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    eth3:
+      routes:
+      - to: default
+        via: 192.168.82.100
 
-Activamos enrutamiento en el _firewall_
+```
+
+```bash
+vagrant@dmz:$ sudo vi /etc/netplan/60-routes.yaml
+```
+
+```bash
+---
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    eth1:
+      routes:
+      - to: default
+        via: 10.0.200.1
+
+```
+
+```bash
+vagrant@ldap:$ sudo vi /etc/netplan/60-routes.yaml
+```
+
+```bash
+---
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    eth1:
+      routes:
+      - to: default
+        via: 10.0.82.1
+
+```
+Para que el _fw_ actue como router y redirecciones los paquetes a la itnerfaz de salida apropiada, debemos activar _forwarding_
 De forma temporal mediante el comando
 ```bash
-sysctl -w net.ipv4.ip_forward=1
+vagrant@fw:$sudo sysctl -w net.ipv4.ip_forward=1
 ```
 Hacemos el cambio persistente editando el fichero _/etc/sysctl.conf_ y descomenta la linea 28
 
 ```bash
-vagrant@fw:$ sudo vi /etc/sysctl.conf
+vagrant@fw:$sudo vi /etc/sysctl.conf
 28 net.ipv4.ip_forward=1
 ```
 Reiniciar el servicio _systemd-sysctl_
 ```bash
-sudo systemctl restart systemd-sysctl.service 
+vagrant@fw:$sudo systemctl restart systemd-sysctl.service 
 ```
-Probamos conectividad
+Para navegar en la internet, necesitamos utilizar una ip pública, para ello activaremosa traducción de direcciones privadas a públicas (NAT) en el cortafuegos
+```bash
+vagrant@fw:$sudo iptables -t nat -A POSTROUTING -o eth3 -j MASQUERADE
+```
+
+Para guardar la regla anterior de forma persistente, utilizamos el comando _netfilter-persistent_
+```bash
+vagrant@fw:$sudo netfilter-persistent save
+```
+Probamos conectividad desde las diferentes máquinas
 
 ```bash
 vagrant@lan:$ ping 10.0.82.1
@@ -88,15 +149,13 @@ vagrant@lan:$ ping 10.0.200.100
 vagrant@lan:$ ping 192.168.82.100
 vagrant@lan:$ ping yahoo.es
 ```
-
-
-Para navegar en la internet, necesitamos utilizar una ip pública, para ello activaremosa traducción de direcciones privadas a públicas (NAT) en el cortafuegos
-```
-iptables -t nat -A POSTROUTING -o eth3 -j MASQUERADE
-```
+>[!IMPORTANT]
+>Es importante verificar que lo hecho hasta ahora funciona correctamente apagadas las máquinas.
+>Reinícilas _vagrant reload_ y prueba conctividad de nuevo.
 
 >[!NOTE]
-> El alumno deberá implementar el resto de reglas según se detalla en el siguiente apartado y se muTCP es un protocolo basado en conexión, por lo que una conexión ESTABLISHED esta bien definida. UDP es un protocolo no orientado a conexión, por lo que ESTABLISHED hace referencia a tráfico que ha tenido una respuesta y viceversa.
+> El alumno deberá implementar el resto de reglas según se detalla en el siguiente apartado.
+ 
 
 ### Firewall - Reglas
 ![network_diagram](https://github.com/ASIR2-SGD/asir2-sgd.github.io/blob/main/img/network_diagram.png?raw=true)
@@ -117,6 +176,7 @@ iptables -t nat -A POSTROUTING -o eth3 -j MASQUERADE
 >[!Tip]
 >Si en algún momento deseas que tu máquina tenga acceso a internet, puedes hacerlo de forma temporal agregando la linea ```route add default gw 10.0.2.2``` . Recuerda eliminarla finalizado el uso de internet para no alterar el funcionamiento de la práctica. Usa el comando ```route del default gw 10.0.2.2```
 
+
 ### Redireccionamiento de puertos y apache2 ldap authentication.
 
 En nuestra zona DMZ ubicaremos un servidor web, en el cual ciertas páginas estarán protegidas y únicamente se permitira el acceso a los usuarios autenticados. La autenticación se llevara a cabo mediante el servidor _ldap_ que hay en la _lan_, alcanzable a través de las reglas del firewall.
@@ -134,6 +194,9 @@ Para llevara a cabo la autenticación deberemos utilizar el módulo de apache [_
 ![iptables-chains](https://miro.medium.com/v2/resize:fit:720/format:webp/1*Vs4XnYTCI4fXYuGl2V3xfw.png)
 
 **Contrack**: Seguimiento de paquetes
+>[!NOTE]
+TCP es un protocolo basado en conexión, por lo que una conexión ESTABLISHED esta bien definida. UDP es un protocolo no orientado a conexión, por lo que ESTABLISHED hace referencia a tráfico que ha tenido una respuesta y viceversa.
+
 ![iptables_conntrack_2](https://github.com/ASIR2-SGD/asir2-sgd.github.io/blob/main/img/iptables_conntrack_2.png?raw=true)
 
 
@@ -230,6 +293,56 @@ Para llevara a cabo la autenticación deberemos utilizar el módulo de apache [_
 	iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 80 -j DNAT --to-destination 192.168.1.2:80
 ```
   
+
+##Anexo III. Firewall - Reglas - soluciones
+- [x] Permitir el tráfico desde el interfaz loopback
+```bash
+vagrant@fw:$sudo iptables -A INPUT -i lo -j ACCEPT
+vagrant@fw:$sudo iptables -A OUTPUT -o lo -j ACCEPT
+```
+- [x] No se permite el trafico entrante (dirigido a) ni saliente (generado por) del cortafuegos, exceptuando el tráfico _ssh_ proveniente desde nuestr ordenador anfitrión y el ordenador del profesor 192.168.82.101
+
+```bash
+vagrant@fw:$sudo iptables -A INPUT -p tcp -s 10.0.2.15 --dport 22 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
+vagrant@fw:$sudo iptables -A OUTPUT -p tcp -d 10.0.2.15 --sport 22 -m conntrack --ctstate ESTABLISHED -j ACCEPT
+
+vagrant@fw:$sudo iptables -A INPUT -p tcp -s 192.168.82.101 --dport 22 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
+vagrant@fw:$sudo iptables -A OUTPUT -p tcp -d 192.168.82.101 --sport 22 -m conntrack --ctstate ESTABLISHED -j ACCEPT
+
+vagrant@fw:$sudo iptables -t filter -P INPUT DROP
+vagrant@fw:$sudo iptables -t filter -P OUTPUT DROP
+
+vagrant@fw:$sudo iptables -A INPUT -i lo -j ACCEPT
+vagrant@fw:$sudo iptables -A OUTPUT -o lo -j ACCEPT
+```
+- [x] No se permite el tráfico de la red _dmz_ a la red _lan_ exceptuando el tráfico _ldap_ dirigido a al servidor _ldap_.
+
+```bash
+vagrant@fw:$sudo iptables -A FORWARD -i eth2 -o eth1 -p udp -d 10.0.82.200 --dport 349 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
+vagrant@fw:$sudo iptables -A FORWARD -i eth1 -o eth2 -p udp -s 10.0.82.200 --sport 349 -m conntrack --ctstate ESTABLISHED -j ACCEPT
+```
+- [x] No se permite el tráfico saliente (generado por) de la red _dmz_ exceptuando el mencionado en el apartado anterior
+
+```bash
+vagrant@fw:$sudo iptables -A FORWARD -i eth2 -o eth3  -p tcp -m conntrack --ctstate ESTABLISHED -j ACCEPT
+vagrant@fw:$sudo iptables -A FORWARD -i eth3 -o eth2  -p tcp -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
+```
+- [x] Se permite el tráfico al exterior (wan) generando en la red _lan_, exceptuando el tráfico proveniente del servidor _ldap_
+```bash
+vagrant@fw:$sudo iptables -A FORWARD -i eth3 -o eth1  -p tcp -d !10.0.82.200 -m conntrack --ctstate ESTABLISHED -j ACCEPT
+vagrant@fw:$sudo iptables -A FORWARD -i eth1 -o eth3  -p tcp -s !10.0.82.200 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
+```
+- [x] Se permite el tráfico http/s del exterior dirigido a la _dmz_
+```bash
+vagrant@fw:$sudo iptables -A FORWARD -i eth3 -o eth2 -p tcp -m multiport --dports 80,443 -d 10.0.200.100 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
+vagrant@fw:$sudo iptables -A FORWARD -i eth2 -o eth3 -p tcp -m multiport --dports 80,443 -s 10.0.200.100 -m conntrack --ctstate ESTABLISHED -j ACCEPT
+```
+- [x] Las peticiones provenientes del exterior al puerto 80/443 (http/s) serán redirigidas al servidor web de la _dmz_
+```bash
+vagrant@fw:$sudo iptables -t nat -A PREROUTING -i ethe -p tcp -m --dport 80 -j DNAT --to-destination 10.0.200.100:80
+vagrant@fw:$sudo iptables -t nat -A PREROUTING -i ethe -p tcp -m --dport 443 -j DNAT --to-destination 10.0.200.100:443
+vagrant@fw:$sudo iptables -t filter -P FORWARD DROP
+```
 
 >[!NOTE]
 > A realizar por el alumno
