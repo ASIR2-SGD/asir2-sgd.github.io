@@ -294,7 +294,7 @@ TCP es un protocolo basado en conexión, por lo que una conexión ESTABLISHED es
 ```
   
 
-##Anexo III. Firewall - Reglas - soluciones
+## Anexo III. Firewall - Reglas - soluciones
 - [x] Permitir el tráfico desde el interfaz loopback
 ```bash
 vagrant@fw:$sudo iptables -A INPUT -i lo -j ACCEPT
