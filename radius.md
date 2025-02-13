@@ -19,7 +19,10 @@ Los servidor RADIUS son ampliamente usados por los operadores de Internet (PPPoE
 * Actualizar los tests correspondientes
 
 ### LDAP
-* Crear el nodo raiz aula82.local
+* Crear el nodo raiz aul82.local
+
+>[!WARNING]
+> El comando _dpgk-reconfigure_ creará un nuevo árbol eliminando cualquier configuración anterior (TLS, Contraseña administrador). No será necesario ejecutarlo si dc=aula82,dc=local ya está creado y con los usuarios insertados.
 
 ```bash
 $sudo dpkg-reconfigure slapd
