@@ -89,6 +89,7 @@ $ incus storage show
 $ incus storage info <pool_name>
 $ incus storage set <pool_name> size=<new_size>GiB
  ``` 
- **Init setup**
+ **Anexo I. Links**
+ * [linux containers](https://images.linuxcontainers.org/)
  
  

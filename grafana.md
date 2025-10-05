@@ -29,7 +29,7 @@ incus$ incus list -n4st
 ```
 Instalación de paquetes y repositorios necesarios
 ```bash
-incus$ incus exec <instance> -- bash -c 'apt-get update && apt-get -y install  aptitude wget bash-completion gpg' 
+incus$ incus exec <instance> -- bash -c 'apt-get update && apt-get -y install  aptitude wget bash-completion gpg nano xsel' 
 incus$ incus exec <instance> -- bash -c 'wget -q -O - https://apt.grafana.com/gpg.key | gpg --dearmor > /etc/apt/keyrings/grafana.gpg'
 incus$ incus exec <instance> -- bash -c 'echo "deb [signed-by=/etc/apt/keyrings/grafana.gpg] https://apt.grafana.com stable main" | tee /etc/apt/sources.list.d/grafana.list'
 
@@ -94,8 +94,48 @@ livedebugging {
   enabled = true
 }
 ```
+Podemos consultar el correcto funcionamiento de _Alloy_ a través de su [API](https://grafana.com/docs/alloy/latest/reference/http/)
+```shell
+curl alloy-ip:12345/-/ready
+curl alloy-ip:12345/-/healthy
+```
+
+**Tareas**
+* Configurar alloy para que obtenga métricas de si mismo [tutorial](https://grafana.com/docs/alloy/latest/collect/metamonitoring/)
+* Obtener métrica de incus server y visualizar en grafana [tutorial](https://linuxcontainers.org/incus/docs/main/metrics/)
+* Enviar los logs de incus server a loki[tutorial](https://linuxcontainers.org/incus/docs/main/server_config/#server-options-logging)
+* Obtener métricas de un servidor linux a través de [node exporter](https://gist.github.com/nwesterhausen/d06a772cbf2a741332e37b5b19edb192)
+* Obtener remote syslogs y reenviar a loki [tutorial](https://grafana.com/docs/alloy/latest/monitor/monitor-syslog-messages/)
+
+
 ## Loki
 
+Loki almacena de forma eficiente los _logs_ que pueden ser explorados mediante un lenguaje de consulta (LogQL)
+
+```bash
+incus$ incus exec loki -- bash -c ' apt-get update && apt-get -y install loki'
+incus$ incus shell loki
+```
+
+>[!WARNING]
+>La configuración por defecto de loki no permite iniciar el servicio de forma correcta. Es necesario desactivar la opción *enable_multi_varian_queries: true* del fichero de configuración /etc/loki/config.yml
+>
+
+* Habilitar servicio al arranque
+```bash
+alloy$ systemctl enable loki.service
+alloy$ systemctl start loki.service
+```
+* Comprueba que el servicio está escuchando
+```bash
+alloy$ ss -atunp
+```
+
+Podemos comprobar el correcto funcionamiento de _loki_ consultando la [API](https://grafana.com/docs/loki/latest/reference/loki-http-api/)
+```bash
+curl loki-ip:3100
+```
 ## Mimir
 
+TODO
 ## Tempo
