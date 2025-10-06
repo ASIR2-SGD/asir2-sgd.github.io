@@ -133,9 +133,48 @@ alloy$ ss -atunp
 
 Podemos comprobar el correcto funcionamiento de _loki_ consultando la [API](https://grafana.com/docs/loki/latest/reference/loki-http-api/)
 ```bash
-curl loki-ip:3100
+curl loki-ip:3100/ready
+curl loki-ip:3100/services
 ```
 ## Mimir
 
-TODO
-## Tempo
+[Mimir](https://grafana.com/docs/mimir/latest/get-started/) es una base de datos  compatible con _prometheus_ que permite configurar alertas.
+
+```bash
+incus$ incus exec mimir -- bash -c ' apt-get update && apt-get -y install mimir'
+incus$ incus shell mimir
+```
+
+**Configuración**
+Tras la instalación, existe un fichero de ejemplo que podemos usar para empezar
+
+```bash
+mimir$ cp /etc/mimir/config.example.yaml config.yml
+```
+>[!WARNING]
+>La configuración por defecto de mimir almacena los datos en un servido S3 de amazon, deberemos desactivar dicha sección en el fichero de configuración e indicar que utilice el sistema de ficheros local
+
+Reiniciar el servicio tras la configuración y comprobar que está activo al arranque
+
+```bash
+mimir$ systemctql restart mimir
+mimir$ systemctl status mimir
+```
+
+ 
+ Comprueba que el servicio está escuchando
+```bash
+mimir ss -atunp
+```
+
+
+Comprueba el estado de _mimir_ consultando la [API](Podemos comprobar el correcto funcionamiento de _loki_ consultando la [API](https://grafana.com/docs/loki/latest/reference/loki-http-api/)
+```bash
+curl mimir-ip:8080/ready
+curl mimir-ip:8080/api/v1/user_stats
+curl mimir-ip:8080/config
+```
+
+>[!NOTE]
+>Para configurar _mimir_ como datasource en grafana deberás indicar la siguietne ruta en el campo _Connection_ http://mimir-ip:port/prometheus
+![grafana-mimir-dashboard](./resources/grafana-mimir-dashboard.png)
