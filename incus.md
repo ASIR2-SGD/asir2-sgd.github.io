@@ -73,9 +73,9 @@ $ incus profile show default
  ```bash
 $ incus network list
 $ incus network show incusbr0
-$ incus network create asirnertwork \
+$ incus network create asirnetwork \
       ipv4.address=<ip/prefix> \
-      ipv4.address=none ipv4.nat=true \ 
+      ipv6.address=none ipv4.nat=true \ 
       ipv4.dhcp.ranges = <ip-first>-<ip-last> \
       ipv4.dhcp.routes=<network>,<next-hop>, 0.0.0.0,<default_gw> 
 $ incus network attach <network> <instance>
