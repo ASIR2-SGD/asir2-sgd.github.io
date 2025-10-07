@@ -8,3 +8,8 @@
 * Gestión de logs y métricas
 	* [Gestión de logs con syslogs](https://asir2-sgd.github.io/P1_Log_centralizados)
 	* [Gestión de logs y métrica con grafana](https://asir2-sgd.github.io/grafana)
+* Anexo I. Utilidades
+	* [Autojump](https://asir2-sgd.github.io/autojump)
+	* [Byobu](https://asir2-sgd.github.io/byobu)
+* Anexo II. Ficheros de configuración
+	* 
