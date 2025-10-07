@@ -12,4 +12,6 @@
 	* [Autojump](https://asir2-sgd.github.io/autojump)
 	* [Byobu](https://asir2-sgd.github.io/byobu)
 * Anexo II. Ficheros de configuración
-	* 
+	* [config.alloy](https://asir2-sgd.github.io/resources/config.alloy)
+	* [mimir config.yml](https://asir2-sgd.github.io/resources/mimir_config.yml)
+	* [profile-clouid-init](https://asir2-sgd.github.io/resources/profile-cloudd-init)
