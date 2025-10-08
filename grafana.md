@@ -23,10 +23,12 @@ La actividad consiste en obtener y visualizar la métrica de nuestra red simulad
 	* srv1
 	* srv2
 	* srv3
+
 ```bash
 incus$ incus launch images:ubuntu/24.04 grafana --network asirnetwork      
 incus$ incus list -n4st
 ```
+
 Instalación de paquetes y repositorios necesarios
 
 ```bash
@@ -44,6 +46,7 @@ incus$ incus exec grafana -- bash -c ' apt-get update && apt-get -y install graf
 incus$ incus shell grafana
 
 ```
+
 * Habilitar servicio al arranque
 
 ```bash
@@ -54,7 +57,9 @@ grafana$ systemctl start grafana-server.service
 ```bash
 grafana$ ss -atunp
 ```
+
 * Logging (admin/admin)
+
 ```bash
 http://<ip-grafana>:3000
 ```
@@ -67,21 +72,29 @@ incus$ incus exec alloy -- bash -c ' apt-get update && apt-get -y install alloy'
 incus$ incus shell alloy
 
 ```
+
 * Habilitar servicio al arranque
+
 ```bash
 alloy$ systemctl enable alloy.service
 alloy$ systemctl start alloy.service
 ```
+
 * Comprueba que el servicio está escuchando
+
 ```bash
 alloy$ ss -atunp
 ```
+
 * Fichero configuración
+
 ```bash
 /etc/default/alloy
 /etc/alloy/config.alloy
 ```
+
 * Permitir acceso remoto al UI
+
 ```bash
 /etc/default/alloy
 ...
@@ -96,7 +109,9 @@ livedebugging {
   enabled = true
 }
 ```
+
 Podemos consultar el correcto funcionamiento de _Alloy_ a través de su [API](https://grafana.com/docs/alloy/latest/reference/http/)
+
 ```shell
 curl alloy-ip:12345/-/ready
 curl alloy-ip:12345/-/healthy
@@ -124,20 +139,25 @@ incus$ incus shell loki
 
 
 * Habilitar servicio al arranque
+
 ```bash
 alloy$ systemctl enable loki.service
 alloy$ systemctl start loki.service
 ```
+
 * Comprueba que el servicio está escuchando
+
 ```bash
 alloy$ ss -atunp
 ```
 
 Podemos comprobar el correcto funcionamiento de _loki_ consultando la [API](https://grafana.com/docs/loki/latest/reference/loki-http-api/)
+
 ```bash
 curl loki-ip:3100/ready
 curl loki-ip:3100/services
 ```
+
 ## Mimir
 
 [Mimir](https://grafana.com/docs/mimir/latest/get-started/) es una base de datos  compatible con _prometheus_ que permite configurar alertas.
@@ -163,14 +183,15 @@ mimir$ systemctql restart mimir
 mimir$ systemctl status mimir
 ```
 
- 
- Comprueba que el servicio está escuchando
+Comprueba que el servicio está escuchando
+
 ```bash
 mimir ss -atunp
 ```
 
 
 Comprueba el estado de _mimir_ consultando la [API](Podemos comprobar el correcto funcionamiento de _loki_ consultando la [API](https://grafana.com/docs/loki/latest/reference/loki-http-api/)
+
 ```bash
 curl mimir-ip:8080/ready
 curl mimir-ip:8080/api/v1/user_stats
