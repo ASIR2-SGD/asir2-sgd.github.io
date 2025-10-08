@@ -45,6 +45,7 @@ incus$ incus shell grafana
 
 ```
 * Habilitar servicio al arranque
+
 ```bash
 grafana$ systemctl enable grafana-server.service
 grafana$ systemctl start grafana-server.service
@@ -118,9 +119,9 @@ incus$ incus exec loki -- bash -c ' apt-get update && apt-get -y install loki'
 incus$ incus shell loki
 ```
 
->[!WARNING]
->La configuración por defecto de loki no permite iniciar el servicio de forma correcta. Es necesario desactivar la opción *enable_multi_varian_queries: true* del fichero de configuración /etc/loki/config.yml
->
+> [!WARNING]
+> La configuración por defecto de loki no permite iniciar el servicio de forma correcta. Es necesario desactivar la opción *enable_multi_varian_queries: true* del fichero de configuración /etc/loki/config.yml
+
 
 * Habilitar servicio al arranque
 ```bash
@@ -152,8 +153,8 @@ Tras la instalación, existe un fichero de ejemplo que podemos usar para empezar
 ```bash
 mimir$ cp /etc/mimir/config.example.yaml config.yml
 ```
->[!WARNING]
->La configuración por defecto de mimir almacena los datos en un servido S3 de amazon, deberemos desactivar dicha sección en el fichero de configuración e indicar que utilice el sistema de ficheros local
+> [!WARNING]
+> La configuración por defecto de mimir almacena los datos en un servido S3 de amazon, deberemos desactivar dicha sección en el fichero de configuración e indicar que utilice el sistema de ficheros local
 
 Reiniciar el servicio tras la configuración y comprobar que está activo al arranque
 
@@ -176,6 +177,6 @@ curl mimir-ip:8080/api/v1/user_stats
 curl mimir-ip:8080/config
 ```
 
->[!NOTE]
->Para configurar _mimir_ como datasource en grafana deberás indicar la siguietne ruta en el campo _Connection_ http://mimir-ip:port/prometheus
+> [!NOTE]
+> Para configurar _mimir_ como datasource en grafana deberás indicar la siguietne ruta en el campo _Connection_ http://mimir-ip:port/prometheus
 ![grafana-mimir-dashboard](./resources/grafana-mimir-dashboard.png)
