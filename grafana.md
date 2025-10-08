@@ -23,17 +23,18 @@ La actividad consiste en obtener y visualizar la métrica de nuestra red simulad
 	* srv1
 	* srv2
 	* srv3
- ```bash
+```bash
 incus$ incus launch images:ubuntu/24.04 grafana --network asirnetwork      
 incus$ incus list -n4st
 ```
 Instalación de paquetes y repositorios necesarios
+
 ```bash
 incus$ incus exec <instance> -- bash -c 'apt-get update && apt-get -y install  aptitude wget bash-completion gpg nano xsel' 
 incus$ incus exec <instance> -- bash -c 'wget -q -O - https://apt.grafana.com/gpg.key | gpg --dearmor > /etc/apt/keyrings/grafana.gpg'
 incus$ incus exec <instance> -- bash -c 'echo "deb [signed-by=/etc/apt/keyrings/grafana.gpg] https://apt.grafana.com stable main" | tee /etc/apt/sources.list.d/grafana.list'
 
- ```
+```
  
 ## Grafana
 **Instalar y configurar grafana**
