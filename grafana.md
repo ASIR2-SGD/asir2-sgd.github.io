@@ -40,11 +40,12 @@ incus$ incus exec <instance> -- bash -c 'echo "deb [signed-by=/etc/apt/keyrings/
  
 ## Grafana
 **Instalar y configurar grafana**
+
 * Añadir repositorios zabbix
+
 ```bash
 incus$ incus exec grafana -- bash -c ' apt-get update && apt-get -y install grafana'
 incus$ incus shell grafana
-
 ```
 
 * Habilitar servicio al arranque
