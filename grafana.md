@@ -168,13 +168,11 @@ incus$ incus shell mimir
 ```
 
 **Configuración**
-Tras la instalación, existe un fichero de ejemplo que podemos usar para empezar
+Tras la instalación, debemos modificar la configuración de mimir, puedes descargar una configuració operativa para nuestros propósitos con el siguiene comando:
 
 ```bash
-mimir$ cp /etc/mimir/config.example.yaml /etc/mimir/config.yml
+wget -O /etc/mimir/config.test.yml https://github.com/ASIR2-SGD/asir2-sgd.github.io/blob/main/resources/files/mimir_config.yml
 ```
->[!WARNING]
->La configuración por defecto de mimir almacena los datos en un servido S3 de amazon, deberemos desactivar dicha sección en el fichero de configuración e indicar que utilice el sistema de ficheros local
 
 Reiniciar el servicio tras la configuración y comprobar que está activo al arranque
 
