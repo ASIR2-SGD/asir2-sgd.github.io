@@ -138,7 +138,6 @@ incus$ incus shell loki
 >[!WARNING]
 >La configuración por defecto de loki no permite iniciar el servicio de forma correcta. Es necesario desactivar la opción *enable_multi_varian_queries: true* del fichero de configuración /etc/loki/config.yml
 
-
 * Habilitar servicio al arranque
 
 ```bash
