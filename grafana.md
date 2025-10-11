@@ -121,7 +121,7 @@ curl alloy-ip:12345/-/healthy
 **Tareas**
 * Configurar alloy para que obtenga métricas de si mismo [tutorial](https://grafana.com/docs/alloy/latest/collect/metamonitoring/)
 * Obtener métrica de incus server y visualizar en grafana [tutorial](https://linuxcontainers.org/incus/docs/main/metrics/)
-* Enviar los logs de incus server a loki[tutorial](https://linuxcontainers.org/incus/docs/main/server_config/#server-options-logging)
+* Enviar los logs de incus server a loki [tutorial](https://linuxcontainers.org/incus/docs/main/server_config/#server-options-logging)
 * Obtener métricas de un servidor linux a través de [node exporter](https://gist.github.com/nwesterhausen/d06a772cbf2a741332e37b5b19edb192)
 * Obtener remote syslogs y reenviar a loki [tutorial](https://grafana.com/docs/alloy/latest/monitor/monitor-syslog-messages/)
 
@@ -202,3 +202,39 @@ curl mimir-ip:8080/config
 
 
 ![grafana-mimir-dashboard](./resources/grafana-mimir-dashboard.png)
+## Métricas de incus
+Incus facilita enormemente la tarea de obtener valores de [métrica](https://linuxcontainers.org/incus/docs/main/metrics/) de  sus instancias que podemos obtener con el comando ```bash incusquery /1.0/metrics```. Debemos exponerlas para que sean accesibles medianta la API, deberemos llevar a cabo algunos cambios en la configuración global
+
+```bash
+incus$ incus config set core.https_address ":8443"
+incus$ incus config set core.metrics_address ":8444"
+```
+
+De esta forma exponemos incus en la red , accede a ```bash https://incus-ip:8443``` y sigue los pasos para crear una conexión TLS necesaria.
+
+Incus también puede enviar los logs a _loki_ llevando a cabo los siguientes cambios en la configuraición global.
+```bash
+incus$ incus config set logging.loki01.target.type  loki
+incus$ incus config set logging.loki01.target.address  <loki-ip>:3100
+incus$ incus config set logging.loki01.lifecycle  instance
+incus$ incus config set logging.loki01.types lifecycle,network-acl,logging
+```
+
+Comprueba y corrige la configuraición global de incus en caso de que sea necesario mediante los comandos.
+
+```bash
+incus$ incus config show
+incus$ incus config edit
+```
+
+## Actividad. Métricas apache/mysql
+Se propone en la siguiente actividad que el alumno sea capaz de configurar los componentes vistos para visualizar la información e métrica de un servidor web apache.
+**Pasos**
+- [ ] Crear nueva instancia en incus denominada apache
+- [ ] Instala y configura el servidor apache
+- [ ] Expón los datos de métrica del servidor apache [tutorial](https://grafana.com/docs/grafana-cloud/monitor-infrastructure/integrations/integration-reference/integration-apache-http/#before-you-begin)
+- [ ] Configurar _alloy_ para que recoja los datos de métrica de apache y los almacene en _mirmir_.[Manual](https://grafana.com/docs/grafana-cloud/monitor-infrastructure/integrations/integration-reference/integration-apache-http/#configuration-snippets-for-grafana-alloy)
+- [ ] Muestra los datos en _grafana_
+
+
+I
