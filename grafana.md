@@ -200,5 +200,7 @@ curl mimir-ip:8080/config
 ```
 
 >[!NOTE]
->Para configurar _mimir_ como datasource en grafana deberás indicar la siguietne ruta en el campo _Connection_ http://mimir-ip:port/prometheus
+>Para configurar _mimir_ como datasource en grafana deberás indicar la siguietne ruta en el campo _Connection_http://mimir-ip:port/prometheus
+
+
 ![grafana-mimir-dashboard](./resources/grafana-mimir-dashboard.png)
