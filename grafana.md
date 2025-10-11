@@ -15,11 +15,11 @@ La actividad consiste en obtener y visualizar la métrica de nuestra red simulad
   incus$ incus network show asirnetwork     
  ```
 * Crear instancias para las máquinas:
-	* Grafana
-	* Alloy
-	* Loki
-	* Mimir
-	* Tempo
+	* grafana
+	* alloy
+	* loki
+	* mimir
+	* tempo
 	* srv1
 	* srv2
 	* srv3
@@ -32,7 +32,7 @@ incus$ incus list -n4st
 Instalación de paquetes y repositorios necesarios
 
 ```bash
-incus$ incus exec <instance> -- bash -c 'apt-get update && apt-get -y install  aptitude wget bash-completion gpg nano xsel' 
+incus$ incus exec <instance> -- bash -c 'apt-get update && apt-get -y install  aptitude wget bash-completion gpg nano xsel vim' 
 incus$ incus exec <instance> -- bash -c 'wget -q -O - https://apt.grafana.com/gpg.key | gpg --dearmor > /etc/apt/keyrings/grafana.gpg'
 incus$ incus exec <instance> -- bash -c 'echo "deb [signed-by=/etc/apt/keyrings/grafana.gpg] https://apt.grafana.com stable main" | tee /etc/apt/sources.list.d/grafana.list'
 
@@ -135,8 +135,8 @@ incus$ incus exec loki -- bash -c ' apt-get update && apt-get -y install loki'
 incus$ incus shell loki
 ```
 
-> [!WARNING]
-> La configuración por defecto de loki no permite iniciar el servicio de forma correcta. Es necesario desactivar la opción *enable_multi_varian_queries: true* del fichero de configuración /etc/loki/config.yml
+>[!WARNING]
+>La configuración por defecto de loki no permite iniciar el servicio de forma correcta. Es necesario desactivar la opción *enable_multi_varian_queries: true* del fichero de configuración /etc/loki/config.yml
 
 
 * Habilitar servicio al arranque
@@ -172,10 +172,10 @@ incus$ incus shell mimir
 Tras la instalación, existe un fichero de ejemplo que podemos usar para empezar
 
 ```bash
-mimir$ cp /etc/mimir/config.example.yaml config.yml
+mimir$ cp /etc/mimir/config.example.yaml /etc/mimir/config.yml
 ```
-> [!WARNING]
-> La configuración por defecto de mimir almacena los datos en un servido S3 de amazon, deberemos desactivar dicha sección en el fichero de configuración e indicar que utilice el sistema de ficheros local
+>[!WARNING]
+>La configuración por defecto de mimir almacena los datos en un servido S3 de amazon, deberemos desactivar dicha sección en el fichero de configuración e indicar que utilice el sistema de ficheros local
 
 Reiniciar el servicio tras la configuración y comprobar que está activo al arranque
 
@@ -196,9 +196,10 @@ Comprueba el estado de _mimir_ consultando la [API](Podemos comprobar el correct
 ```bash
 curl mimir-ip:8080/ready
 curl mimir-ip:8080/api/v1/user_stats
+curl mimir-ip:8080/api/v1/status/flags
 curl mimir-ip:8080/config
 ```
 
-> [!NOTE]
-> Para configurar _mimir_ como datasource en grafana deberás indicar la siguietne ruta en el campo _Connection_ http://mimir-ip:port/prometheus
+>[!NOTE]
+>Para configurar _mimir_ como datasource en grafana deberás indicar la siguietne ruta en el campo _Connection_ http://mimir-ip:port/prometheus
 ![grafana-mimir-dashboard](./resources/grafana-mimir-dashboard.png)
