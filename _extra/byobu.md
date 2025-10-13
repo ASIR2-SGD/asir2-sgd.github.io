@@ -1,3 +1,7 @@
+---
+layout: default
+title: "byobu"
+---
 
 **Activar ratón**
 ```bash

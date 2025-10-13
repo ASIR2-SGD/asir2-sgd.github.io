@@ -1,3 +1,7 @@
+---
+layout: default
+title: "Cloud init example"
+---
 
 ```yaml
 config:

@@ -1,3 +1,7 @@
+---
+layout: default
+title: "firewall"
+---
 # Práctica Firewall.
 ## Configuración de un cortafuegos basado en iptables
 
@@ -161,7 +165,7 @@ vagrant@lan:$ ping yahoo.es
  
 
 ### Firewall - Reglas
-![network_diagram](https://github.com/ASIR2-SGD/asir2-sgd.github.io/blob/main/img/network_diagram.png?raw=true)
+![network_diagram]({% link /resources/img/network_diagram.png %})
 - [ ] Permitir el tráfico desde el interfaz loopback
 - [ ] No se permite el trafico entrante (dirigido a) ni saliente (generado por) del cortafuegos, exceptuando el tráfico _ssh_ proveniente desde nuestr ordenador anfitrión y el ordenador del profesor 192.168.82.101
 - [ ] No se permite el tráfico de la red _dmz_ a la red _lan_ exceptuando el tráfico _ldap_ dirigido a al servidor _ldap_.
@@ -192,7 +196,7 @@ Para llevara a cabo la autenticación deberemos utilizar el módulo de apache [_
 >Nuestro servidor web, ubicado en la máquina _dmz_ deber responder con un dialogo de autenticación a la url:: ``` ip:/sad_secure``` 
 ## Anexo I. Arquitectura IP-Tables
 
-![iptables chains](https://raw.githubusercontent.com/ASIR2-SGD/asir2-sgd.github.io/refs/heads/main/img/iptables-in-linux.webp)
+![iptables chains]({% link /resources/img/iptables-in-linux.webp %})
 
 
 ![iptables-chains](https://miro.medium.com/v2/resize:fit:720/format:webp/1*Vs4XnYTCI4fXYuGl2V3xfw.png)
@@ -201,10 +205,10 @@ Para llevara a cabo la autenticación deberemos utilizar el módulo de apache [_
 >[!NOTE]
 TCP es un protocolo basado en conexión, por lo que una conexión ESTABLISHED esta bien definida. UDP es un protocolo no orientado a conexión, por lo que ESTABLISHED hace referencia a tráfico que ha tenido una respuesta y viceversa.
 
-![iptables_conntrack_2](https://github.com/ASIR2-SGD/asir2-sgd.github.io/blob/main/img/iptables_conntrack_2.png?raw=true)
+![iptables_conntrack_2]({% link /resources/img/iptables_conntrack_2.png %})
 
 
-![iptables_conntrack_3](https://github.com/ASIR2-SGD/asir2-sgd.github.io/blob/main/img/iptables_conntrack_3.png?raw=true)
+![iptables_conntrack_3]({% link /resources/img/iptables_conntrack_3.png %})
 ## Anexo II. Comados
 ### Netfilter
 1. Borrado de reglas
@@ -367,19 +371,3 @@ vagrant@fw:$sudo iptables -A FORWARD -i eth2 -o eth3 -p tcp -m multiport --sport
 vagrant@fw:$sudo iptables -t nat -A PREROUTING -i eth3 -p tcp --dport 80 -j DNAT --to-destination 10.0.200.100:80
 vagrant@fw:$sudo iptables -t nat -A PREROUTING -i eth3 -p tcp --dport 443 -j DNAT --to-destination 10.0.200.100:443
 ```
-
->[!NOTE]
-> A realizar por el alumno
-
->[!TIP]
->dsd
-
->[!IMPORTANT]
->dsd
-
->[!WARNING]
->kjkñl
-
-
->[!CAUTION]
->kjkñl

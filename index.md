@@ -1,45 +1,26 @@
 ---
 ---
 
-Welcome to My Home Page
+# Práctica SGD
+## General - máquinas virtuales y contenedores
+* Vagrant
+* [incus]({% link _tutorials/incus.md %})
 
-{% assign date = '2020-04-13T10:20:00Z' %}
+## Logs y métricas
+* [Gestión de logs con syslogs]({% link _tutorials/central_logs.md %})
+* [Gestión de logs y métrica con grafana]({% link _tutorials/grafana.md %})
 
-- Original date - {{ date }}
+## Firewall
+* [Cortafuegos con iptables]({% link _tutorials/firewall.md %})
 
+## Anexos
+### Anexo I. Utilidades
+* [Autojump]({% link _extra/autojump.md %})
+* [Byobu]({% link _extra/byobu.md %})
+* [Byobu cheatsheet]({% link _extra/byobu_cheatsheet.md %})
 
-> [!NOTE]
-> Highlights information that users should take into account, even when skimming.
-> And supports multi-line text.
+### Anexo II. Ficheros de configuración
+* [Alloy config file]({% link _extra/alloy_config.md %})
+* [Mimir config file]({% link _extra/mimir_config.md %})
+* [Cloud init example]({% link _extra/profile-cloud-init.md %})
 
-> [!TIP]
-> Optional information to help a user be more successful.
-
-> [!IMPORTANT]  
-> Crucial information necessary for users to succeed.
-
-  > [!WARNING]  
-  > Critical content demanding immediate
-  > user attention due to potential risks.
-
-> [!CAUTION]
-> Negative potential consequences of an action.
-> Opportunity to provide more contex
-
-# asir2-sgd.github.io
-
-
-* Gestión de máquinas virtuales y contenedores
-	* Vagrant
-	* [incus](https://asir2-sgd.github.io/incus)
-
-* Gestión de logs y métricas
-	* [Gestión de logs con syslogs](https://asir2-sgd.github.io/P1_Log_centralizados)
-	* [Gestión de logs y métrica con grafana](https://asir2-sgd.github.io/grafana)
-* Anexo I. Utilidades
-	* [Autojump](https://asir2-sgd.github.io/autojump)
-	* [Byobu](https://asir2-sgd.github.io/byobu)
-* Anexo II. Ficheros de configuración
-	* [config.alloy](https://asir2-sgd.github.io/resources/config.alloy)
-	* [mimir config.yml](https://asir2-sgd.github.io/resources/mimir_config.yml)
-	* [profile-clouid-init](https://asir2-sgd.github.io/resources/profile-cloudd-init)

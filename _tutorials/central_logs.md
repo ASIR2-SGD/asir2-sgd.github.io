@@ -1,3 +1,8 @@
+---
+layout: default
+title: "Logs centralizados (rsyslogs)"
+---
+
 # Práctica 1. Registro de Log centralizado
 
 ## Contexto

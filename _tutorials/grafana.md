@@ -1,3 +1,7 @@
+---
+layout: default
+title: "Grafana stack metrics"
+---
 
 # Grafana Metrics Stack
 La actividad consiste en obtener y visualizar la métrica de nuestra red simulada en _incus_ para ello deberemos crear y configurar varias instancias de _ubuntu 24.04_ cada una con su función que se describe brevemente a continuación:
@@ -201,7 +205,7 @@ curl mimir-ip:8080/config
 >Para configurar _mimir_ como datasource en grafana deberás indicar la siguietne ruta en el campo _Connection_http://mimir-ip:port/prometheus
 
 
-![grafana-mimir-dashboard](./resources/grafana-mimir-dashboard.png)
+![grafana-mimir-dashboard]({% link /resources/img/grafana-mimir-dashboard.png %})
 ## Métricas de incus
 Incus facilita enormemente la tarea de obtener valores de [métrica](https://linuxcontainers.org/incus/docs/main/metrics/) de  sus instancias que podemos obtener con el comando ```bash incusquery /1.0/metrics```. Debemos exponerlas para que sean accesibles medianta la API, deberemos llevar a cabo algunos cambios en la configuración global
 

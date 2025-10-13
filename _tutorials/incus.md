@@ -1,4 +1,8 @@
+---
+layout: default
+title: "Incus"
 
+---
 # Incus 
 ## Introducción
 Incus es un software de gestión de contenedores y máquinas virtuales. Con *incus* puedes gestiónar tus instancias mediante la linea de comandos haciéndolo muy útil para el despliegue de aplicaciónes y máquinas virtuales.

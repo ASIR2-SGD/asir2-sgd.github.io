@@ -1,7 +1,13 @@
+---
+layout: default
+title: "Alloy Config file"
+---
+
 ```bash
 /etc/alloy/config.alloy
+```
 
-
+```bash
 // Sample config for Alloy.
 //
 // For a full configuration reference, see https://grafana.com/docs/alloy

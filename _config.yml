@@ -10,6 +10,18 @@ plugins:
 - jekyll-gfm-admonitions
 - jekyll-optional-front-matter
 
+theme: jekyll-theme-hacker
+
+collections:
+  tutorials:
+    output: true
+    permalink: /:collection/:name
+  extra:
+    output: true
+    permalink: /:collection/:name
+
+
+
 exclude: 
   - "**/*.ts" # Exclude source code files!
   - "**/*.js"

@@ -1,3 +1,7 @@
+---
+layout: default
+title: "Mimir config file"
+---
 
 ```yaml
 #/etc/mimir/config.yml 

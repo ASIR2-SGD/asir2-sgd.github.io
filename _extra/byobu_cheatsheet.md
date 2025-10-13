@@ -1,5 +1,11 @@
+---
+layout: default
+title: "Byobu cheatsheet"
+---
+
+
 ```txt
-EYBINDINGS
+KEYBINDINGS
        byobu keybindings can be user defined in /usr/share/byobu/keybindings/ (or within .screenrc if byobu-export was used). The  common  key  bindings
        are:
 
