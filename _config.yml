@@ -1,1 +1,29 @@
+# Site settings
+title: Prácticas ASIR2 
+repository: git@github.com:ASIR2-SGD/asir2-sgd.github.io
+description: >-
+  Assignmets docs for asir2
+title: "ASIR2 DOC 2025/26"
 markdown: GFM
+
+plugins:
+- jekyll-gfm-admonitions
+- jekyll-optional-front-matter
+
+exclude: 
+  - "**/*.ts" # Exclude source code files!
+  - "**/*.js"
+  - "*.ts" # Also those in the root directory!
+  - "*.js"
+  - "*.json" # Don't forget about assets!
+  - node_modules/ # And large vendored directories
+  # And these ignore all the artifacts the build produces:
+  - .sass-cache/
+  - .jekyll-cache/
+  - gemfiles/
+  - Gemfile
+  - Gemfile.lock
+  - vendor/bundle/
+  - vendor/cache/
+  - vendor/gems/
+  - vendor/ruby/
