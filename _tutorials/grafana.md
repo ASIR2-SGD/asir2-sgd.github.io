@@ -175,7 +175,7 @@ incus$ incus shell mimir
 Tras la instalación, debemos modificar la configuración de mimir, puedes descargar una configuració operativa para nuestros propósitos con el siguiene comando:
 
 ```bash
-wget -O /etc/mimir/config.test.yml https://github.com/ASIR2-SGD/asir2-sgd.github.io/blob/main/resources/files/mimir_config.yml
+wget -O /etc/mimir/config.yml https://raw.githubusercontent.com/ASIR2-SGD/asir2-sgd.github.io/refs/heads/main/resources/files/mimir_config.yml
 ```
 
 Reiniciar el servicio tras la configuración y comprobar que está activo al arranque
@@ -207,11 +207,12 @@ curl mimir-ip:8080/config
 
 ![grafana-mimir-dashboard]({% link /resources/img/grafana-mimir-dashboard.png %})
 ## Métricas de incus
-Incus facilita enormemente la tarea de obtener valores de [métrica](https://linuxcontainers.org/incus/docs/main/metrics/) de  sus instancias que podemos obtener con el comando ```bash incusquery /1.0/metrics```. Debemos exponerlas para que sean accesibles medianta la API, deberemos llevar a cabo algunos cambios en la configuración global
+Incus facilita enormemente la tarea de obtener valores de [métrica](https://linuxcontainers.org/incus/docs/main/metrics/) de  sus instancias que podemos obtener con el comando ```bash incus query /1.0/metrics```. Debemos exponerlas para que sean accesibles medianta la API, deberemos llevar a cabo algunos cambios en la configuración global
 
 ```bash
 incus$ incus config set core.https_address ":8443"
 incus$ incus config set core.metrics_address ":8444"
+incus$ incus config set core.metrics_authentication false
 ```
 
 De esta forma exponemos incus en la red , accede a ```bash https://incus-ip:8443``` y sigue los pasos para crear una conexión TLS necesaria.
@@ -220,7 +221,7 @@ Incus también puede enviar los logs a _loki_ llevando a cabo los siguientes cam
 ```bash
 incus$ incus config set logging.loki01.target.type  loki
 incus$ incus config set logging.loki01.target.address  <loki-ip>:3100
-incus$ incus config set logging.loki01.lifecycle  instance
+incus$ incus config set logging.loki01.lifecycle.types  instance
 incus$ incus config set logging.loki01.types lifecycle,network-acl,logging
 ```
 
