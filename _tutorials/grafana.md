@@ -220,7 +220,7 @@ De esta forma exponemos incus en la red , accede a ```bash https://incus-ip:8443
 Incus también puede enviar los logs a _loki_ llevando a cabo los siguientes cambios en la configuraición global.
 ```bash
 incus$ incus config set logging.loki01.target.type  loki
-incus$ incus config set logging.loki01.target.address  <loki-ip>:3100
+incus$ incus config set logging.loki01.target.address  http://<loki-ip>:3100
 incus$ incus config set logging.loki01.lifecycle.types  instance
 incus$ incus config set logging.loki01.types lifecycle,network-acl,logging
 ```
