@@ -17,16 +17,18 @@ Una vez un usuario ha sido autenticado, el sistema debe darle acceso solo a los 
 
 Los permisos se aplican sobre **elementos del sistema de archivos**, tales como archivos regulares, directorios, sockets Unix, enlaces simbólicos, nodos de dispositivos, etc.
 * Lectura (**`r`**: Read): la entidad asociada podrá leer el elemento.
-- Escritura (**`w`**: Write): la entidad asociada podrá escribir o modificar el elemento.
-- Ejecución (**x**: eXecution): la entidad asociada podrá ejecutar el elemento.
+* Escritura (**`w`**: Write): la entidad asociada podrá escribir o modificar el elemento.
+* Ejecución (**x**: eXecution): la entidad asociada podrá ejecutar el elemento.
 
 Las entidades sobre las que tienen vigencia estos permisos son:
 
-- Usuario dueño (**`u`**: User): usuario dueño del elemento en el sistema de archivos.
-- Grupo al que pertenece (**`g`**: Group): grupo al que pertenece el elemento.
-- Otros usuarios (**`o`**: Others): el resto de los usuarios del sistema que no son ni el dueño del elemento, ni pertenecen al grupo del elemento.
-![]()
-![Permisos standard](https://juncotic.com/wp-content/uploads/2021/06/Screenshot_2021-06-18_19-40-42.jpg)
+* Usuario dueño (**`u`**: User): usuario dueño del elemento en el sistema de archivos.
+ * Grupo al que pertenece (**`g`**: Group): grupo al que pertenece el elemento.
+* Otros usuarios (**`o`**: Others): el resto de los usuarios del sistema que no son ni el dueño del elemento, ni pertenecen al grupo del elemento.
+
+
+![posix permisions]({% link /resources/img/acl_posix_perm.jpeg %})
+
 ### Limitaciones
 Estos permisos tienen algunas limitaciones. Consideremos el siguiente ejemplo:
 ```bash
@@ -40,10 +42,11 @@ Las solución pasa por hacer uso de representaciones de permisos para elementos 
 
 #### Acl mínimas
 Son las equivalentes a los permisos POSIX
-![Acl mínimas](https://juncotic.com/wp-content/uploads/2021/07/Screenshot_2021-07-12_20-00-30.jpg)
+![Acl mínimas]({% link /resources/img/acl_minimas.jpeg %})
+
 #### Acl extendidas
 Cuando hablamos de **ACL extendidas** (con máscara), las clases de permisos de usuario dueño y otros coinciden con los que vemos en la salida de `ls -l`, pero la clase de **permisos de grupo** puede contener entradas de **usuarios o grupos nombrados** adicionales
-![acl extendidas](https://juncotic.com/wp-content/uploads/2021/07/Screenshot_2021-07-12_20-03-52.jpg)
+![acl extendidas]({% link /resources/img/acl_extendidas.jpeg %})
 
 #### Instalación de acl
 ```bash
@@ -109,7 +112,7 @@ Crea los siguientes usuarios y grupos, agrega los usuarios al grupo indicado:
 students:x:1006:
 teachers:x:1007:
 asir2:x:1008:asir2_1,asir2_2
-smr1A:x:1009:smr1a_1,smr1a_2
+smr1a:x:1009:smr1a_1,smr1a_2
 asir1:x:1010:asir1_1,asir1_2
 ```
 
