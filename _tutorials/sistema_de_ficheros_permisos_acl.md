@@ -100,10 +100,28 @@ En una nueva instancia de incus denominada `acl`:
 root@acl:~# tree /shared
 /shared
 ├── aula13
+│   └── RLO
+│       ├── redes_1.txt
+│       ├── redes_2.txt
+│       ├── redes_3.txt
+│       └── redes_4.txt
 ├── aula14
 ├── aula82
-├── comun
+│   └── SAD
+│       ├── sad_1.txt
+│       ├── sad_2.txt
+│       ├── sad_3.txt
+│       └── sad_4.txt
+├── common
+│   ├── common_1.txt
+│   ├── common_2.txt
+│   ├── common_3.txt
+│   └── common_4.txt
 └── misc
+    ├── misc_1.txt
+    ├── misc_2.txt
+    ├── misc_3.txt
+    └── misc_4.txt
 ```
 
 Usando los comandos `adduser`y `addgroup`
@@ -135,28 +153,28 @@ teacher2:x:1012:1007:teacher2,,,:/home/teacher2:/bin/bash
 
 >[!NOTE]
 > Comprueba que tu configuración de usuarios y grupos coincide con la deseada mediante el comando ```gentent group``` y ```getent passwd```
->
 
-Asigna los permisos a cada recurso según lo indicado en la tabla
-**TODO**
+Asigna los permisos _acl_ a cada recurso según se explica a continuación
 
-| Recurso          | Student Access | Teachers Access | Extra     |
-| ---------------- | -------------- | --------------- | --------- |
-| ./shared/aula13/ | aula13:r       |                 |           |
-| ./shared/aula14/ | aula14:r       |                 | asir2:rwx |
-| ./shared/aula82/ | aula82:r       |                 |           |
-| ./shared/comun/  | dsd            |                 |           |
-| ./shared/misc/   | dsd            |                 |           |
-|                  | dsd            |                 |           |
-
+* Los usuarios pertenecientes al grupo _teachers_ tendrán de lectura y escritura en todas las carpetas de _shared_
+* Los usuarios del grupo _student_ tendrán permiso de lectura en la carpeta _comun_
+* Los usuarios del grupo _student_ tendrán permiso de lectura y escritura en la carpeta _misc_
+* Los usuarios del grupo _asir1_ tendrán permiso de lectura en la carpeta _aula14_
+* Los usuarios del grupo _asir2_ tendrán permiso de lectura en la carpeta _aula82_
+* Los usuarios del grupo _smr1a_ tendrán permiso de lectura en la carpeta _aula13_
 
 ### Comprobación y verificación
 Diseña un escenario de prueba creando ficheros y carpetas nuevas y cambiando de usuario para llevar a cabo las comprobaciones de permisos necesarios.
 
 ### Entrega
-Entrega un `bash script`que automatice completamente, desde la creación de directorios, grupos e usuarios así como la asignación de permisos *acl* para llevar a cabo la actividad completa.
+Entrega un `Taskfile` que automatice completamente, desde la creación de la instancia, directorios, grupos e usuarios así como la asignación de permisos *acl* para llevar a cabo la actividad completa.
+El fichero `Taskfile` entregado debe tener como mínimo las siguienes tareas:
+* __init__: creación y aprovisionamiento de la instancia denominada _acl_
+* __destroy__: destrucción de la instancia _acl_
+* __build__: construye la práctica (estrucutra de ficheros y directorios necesarios, usuarios, grupos, permisos)
+* __clean__: Elimina todo lo creado en la tarea _build_
+* __test__: Ejecuta los tests.
 
-Vuelca la ejecución el comando ```getfacl -R <carpeta>``` en un fichero denominado getfacl_nombre_alumno.txt
 
 >[!WARNING]
 > El fichero entregado se debe ejecutar sin ningún error y reproducir el escenario esperado de la actividad.
