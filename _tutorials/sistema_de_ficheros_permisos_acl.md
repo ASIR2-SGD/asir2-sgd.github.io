@@ -127,8 +127,8 @@ root@acl:~# tree /shared
 Usando los comandos `adduser`y `addgroup`
 Crea los siguientes usuarios y grupos, agrega los usuarios al grupo indicado:
 ```bash
-students:x:1006:
-teachers:x:1007:
+student:x:1006:
+teacher:x:1007:
 asir2:x:1008:asir2_1,asir2_2
 smr1a:x:1009:smr1a_1,smr1a_2
 asir1:x:1010:asir1_1,asir1_2
