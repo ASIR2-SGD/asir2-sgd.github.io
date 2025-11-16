@@ -74,6 +74,8 @@ $ incus profile list
 $ incus profile show default
 ``` 
  **Network**
+ * Managed bridged network
+  **IP from subnet,connection between host an guest VM**
  ```bash
 $ incus network list
 $ incus network show incusbr0
@@ -86,7 +88,44 @@ $ incus network attach <network> <instance>
 $ incus network delete <network>
 
 ``` 
+ * Unmanaged bridged network (using `nmcli` (NetworkManager))
+ **IP from LAN, connection between host an guest VM**
  
+	 - Create bridge
+	 ```bash
+	 $ nmcli con show
+	 $ nmcli connection show --active
+	 $ sudo nmcli con add ifname br0 type bridge con-name br0
+	 $ sudo nmcli con add type bridge-slave ifname eno1 master br0
+	 $ nmcli -f bridge con show br0
+	 $ brctl show	 
+	 ```
+	 - Disable "Wired connection 1" and turn no br0
+	 ```bash
+	 $ sudo nmcli con down "Wired connection 1"
+	 $ sudo nmcli con up br0  
+	 ```
+	 - Create a bridge profile
+	 ```bash
+	 $ incus create profile bridge
+	 $ incus profile device add bridge eth0 nic name=eth0 nictype=bridged parent=br0
+	 ``` 
+	 - Launch image with bridge profile
+	 ```bash
+	 $ incus launch images:ubuntu/noble lan --profile default --profile bridge
+	 ```
+* Macvlan 
+**IP from LAN, NO connection between host an guest VM**
+	  - Create a `macvlan` profile
+	 ```bash
+	 $ incus create profile bridge
+	 $ incus profile device add bridge eth0 nic name=eth0 nictype=macvlan parent=br0
+	 ``` 
+	 - Launch image with `macvlan` profile
+	 ```bash
+	 $ incus launch images:ubuntu/noble lan --profile default --profile macvlan
+	 ```
+```
  **Storage**
   ```bash
 $ incus storage show

@@ -16,7 +16,7 @@ Nuestras necesidades de almacenamiento cambian dependiendo del momento, en mucho
 Para trabajar con dispositivos de bloques es necesario crear una **máquina virtual** en incus, esta a diferencia de los contenedores de sistema dispone de su propio kernel, pero desde el punto de vista del usuario la interfaz de comandos es la misma.
 ```bash
 incus$ incus launch images:ubuntu/24.04 lvm --vm
-incus$ incus exec raid -- bash -c 'apt-get update && apt-get -y install  aptitude wget bash-completion gpg nano xsel vim lvm2'
+incus$ incus exec lvm -- bash -c 'apt-get update && apt-get -y install  aptitude wget bash-completion gpg nano xsel vim bats git lvm2'
 ```
 
 Incus almacena los datos (imágenes,máquinas virutales, contenedores y custom) en _pools_ divididos en _volúmenes_ de diferentes tipos. Por defecto incus crea un pool denominado _default_. Podemos hacer uso de este pool para crear nuestros volumenes que simularán los discos de nuestro RAID.
