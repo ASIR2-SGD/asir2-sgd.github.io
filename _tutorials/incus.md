@@ -44,7 +44,7 @@ $ incus launch images:ubuntu/24.04 <instance name>
 $ incus launch images:ubuntu/24.04 <instance name> --network <network>
 $incus launch images:ubuntu/noble host1 --storage <pool> --device root,size=40GiB
 
-$incus launch --vm images:ubuntu/noble/desktop desktop -c limits.memory=3GiB -c limits.cpu=4 --console=vga
+$ incus launch --vm images:ubuntu/noble/desktop desktop -c limits.memory=3GiB -c limits.cpu=4 --console=vga
 $ incus copy <source instance> <dst instance>
 
 
@@ -82,9 +82,10 @@ $ incus profile show default
 ``` 
  ### Network
  #### Managed bridged network
-  >[!NOTE]
-> Incus `managed bridged network` crea una subred para cada máquina virtual, la ip la obtiene de un servidor DHCP que crea para dicho segmento
- ```bash
+> [!NOTE]
+> Incus `managed bridged network` crea una subred para cada máquina virtual, la ip la obtiene de un servidor DHCP que crea para dicho segmento.
+---
+```bash
 $ incus network list
 $ incus network show incusbr0
 $ incus network create asirnetwork \
@@ -94,13 +95,13 @@ $ incus network create asirnetwork \
       ipv4.dhcp.routes=<network>,<next-hop>, 0.0.0.0,<default_gw> 
 $ incus network attach <network> <instance>
 $ incus network delete <network>
-
 ``` 
+
  #### Unmanaged bridged network (using `nmcli` (NetworkManager))
- >[!NOTE]
+>[!NOTE]
 > Incus `unmanaged bridged network` necesita de configuración adicional en el _host_ (crear un bridge). obtiene la IP de la LAN donde se encuentra el _host_
  
-	 - Create bridge
+* Create bridge
 	 ```bash
 	 $ nmcli con show
 	 $ nmcli connection show --active
@@ -109,7 +110,7 @@ $ incus network delete <network>
 	 $ nmcli -f bridge con show br0
 	 $ brctl show	 
 	 ```
-	 - Disable "Wired connection 1" and turn no br0
+* Disable "Wired connection 1" and turn no br0
 	 ```bash
 	 $ sudo nmcli con down "Wired connection 1"
 	 $ sudo nmcli con up br0  
@@ -119,24 +120,25 @@ $ incus network delete <network>
 	 $ incus create profile bridge
 	 $ incus profile device add bridge eth0 nic name=eth0 nictype=bridged parent=br0
 	 ``` 
-	 - Launch image with bridge profile
+* Launch image with bridge profile
 	 ```bash
 	 $ incus launch images:ubuntu/noble lan --profile default --profile bridge
 	 ```
 ### Macvlan 
- >[!NOTE]
+>[!NOTE]
 > Incus `macvlan network` **NO** requiere de configuración adicional, esta basada en un modulo del kernel de linux _legacy_.  obtiene la IP de la LAN donde se encuentra el _host_ pero la limitación es que las comunicaciónes entre el _host_ y la _VM_ no son posibles.
-	  - Create a `macvlan` profile
+ 
+  * Create a `macvlan` profile
 	 ```bash
 	 $ incus create profile bridge
 	 $ incus profile device add bridge eth0 nic name=eth0 nictype=macvlan parent=br0
 	 ``` 
-	 - Launch image with `macvlan` profile
+* Launch image with `macvlan` profile
 	 ```bash
 	 $ incus launch images:ubuntu/noble lan --profile default --profile macvlan
 	 ```
-```
- ### Storage
+
+### Storage
   ```bash
 $ incus storage show
 $ incus storage info <pool_name>
@@ -153,6 +155,8 @@ $ incus start mint --console=vga
 $ incus config device remove mint install
 $ incus console mint --type=vga
 $ incus publish mint --alias mint22-image
+$ incus launch --vm mint22-image mint22 -c limits.memory=4GiB -c limits.cpu=4 -c security.secureboot=false --console=vga
+
  ```
   #### [Windows based](https://discussion.scottibyte.com/t/super-easy-windows-11-install-in-an-incus-vm/679)
  ```bash
