@@ -163,12 +163,12 @@ $ incus launch --vm mint22-image mint22 -c limits.memory=4GiB -c limits.cpu=4 -c
 $ wget https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-virtio/virtio-win-0.1.271-1/virtio-win-0.1.271.iso
 $ incus init win11 --empty --vm
 $ incus config device override win11 root size=85GiB
-$ incus config set mint limits.cpu=4 limits.memory=8GiB
-$ incus config device add win11vm vtpm tpm path=/dev/tpm0
-$ incus config device add  disk install source=<windows11.iso> io.bus=usb boot.priority=10
-$ incus config device add win11vm virtio disk source=/home/<user>/Downloads/virtio-win-0.1.271.iso io.bus=usb boot.priority=5
+$ incus config set win11 limits.cpu=4 limits.memory=8GiB
+$ incus config device add win11 vtpm tpm path=/dev/tpm0
+$ incus config device add win11 disk install source=<windows11.iso> io.bus=usb boot.priority=10
+$ incus config device add win11 virtio disk source=/home/<user>/Downloads/virtio-win-0.1.271.iso io.bus=usb boot.priority=5
 $ incus start win11 --console=vga
-$ incus console mint --type=vga
+$ incus console win11 --type=vga
 $ incus config device remove win11 install
 $ incus config device remove win11 virtio
 $ incus publish win11 --alias win11-image
