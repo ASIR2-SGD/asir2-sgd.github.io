@@ -24,29 +24,78 @@ En esta práctica se trabajará sobre estos cuatro conceptos mediante la herrami
 * Saber enviar correos cifrados y descifrar correos privados
 
 ## Desarrollo
+>[!WARNING]
+> Para el correcto funcionamiento de `gpg` en un contenedor linux (LXC) es necesario llevar a cabo la siguiente configuración
+> ```bash
+> printf 'use-agent\npinentry-mode loopback\n' > ~/.gnupg/gpg.conf
+> printf 'allow-loopback-pinentry\n' > ~/.gnupg/gpg-agent.conf
+> ```
 
  1. **Cifrar y descifrar un mensaje mediante criptografía simétrica**
- 1. **Crear par de claves**
- 1. **Listar claves pública/privada**
- 1. **Importar/exportar claves publicas y privadas**
- 1. **Importar y exportar de un servidor de claves**
- 1. **Encriptar un documento con clave pública de destinatario**
- 1. **Desencriptar un documento cifrado con nuetra clave publica haciendo uso de clave privada**
- 1. **Firmar un mensaje y verificar la autoria de un mensaje**
- 2. **Itegridad y autoria de un documento/mensaje**
+ ```bash
+ gpg --armor --symetric --output <encrypted_file.asc>
+ gpg --armor --decrypt <encripted_file.asc> --output <plain_file.txt>
+ ```
+ >[!IMPORTANT]
+> * Descubre como evitar que `gpg` solicite la contraseña para encriptar/desencriptar
+> * Investiga sobre la opcion `--armor`, uso y finalidad
+> * Investiga sobre los algoritmos de encriptación simétricos compatibles con `gpg` y como especificar el uso de uno en particular en el comando.
+> * Desencripta el siguiente texto cifrado con la clave simétrica _asir2_
+> 
+> ```bash
+> -----BEGIN PGP MESSAGE-----
+>
+>jA0ECQMKBeD5Nh596bT/0ooBe1dQceySdZjYYgFFCzQlhkzIS9D2I7rdiR8E1r7L
+>KtM69GVltp1KfYP33RlXZPND7BDSLrQeFcO4zlD25IO2jePcZSzEU+O4lz10WGIl
+>6dnQE8SoTgVeLXNgHE+W0PB+C+8ab47bc0zoBCIDfwG4nWlTFrKdok4jz6Jcwh3F
+>51YTVHEIc2Qh7KU=
+>=kC55
+>-----END PGP MESSAGE-----
+>```
+
+
+
+
+ 2. **Crear par de claves**
+ ```bash
+ gpg --full-gen-keys
+ gpg --batch --passphrase '' --quick-gen-key USER_ID default default 
+ ```
+ 3. **Listar claves pública/privada**
+ ```bash
+ ```
+ 4. **Importar/exportar claves publicas y privadas**
+ ```bash
+ ```
+ 5. **Importar y exportar de un servidor de claves**
+ ```bash
+ ```
+ 6. **Encriptar un documento con clave pública de destinatario**
+ ```bash
+ ```
+ 7. **Desencriptar un documento cifrado con nuetra clave publica haciendo uso de clave privada**
+ ```bash
+ ```
+ 8. **Firmar un mensaje y verificar la autoria de un mensaje**
+ ```bash
+ ```
+ 9. **Itegridad y autoria de un documento/mensaje**
+ ```bash
+ ```
+
      * Simula que alguien quiere manipular tu testamento. 
       * Firma el documento testamento.txt sin cifrar --clear-sign
       * Modifica el documento firmado y verifica 
  
- 4.  **Mailevelope**
+ 10.  **Mailevelope**
       * Importar clave privada
       *  Subir clave pública al keyserver de mailevelope
       *  Importar claves publicas
       *  Enviar un mensaje cifrado y descifrar mensaje.
   
-  5. **Firma un documento encriptado y verifica**
+  11. **Firma un documento encriptado y verifica**
       * Firma el docuento testamento.txt pero está vez lo vas a encriptar para que únicamente lo pueda leer el compañero notario (importar clave secreta) 
-   1.  **Firma claves de compañeros para crear un circulo de confianza** 
+   12.  **Firma claves de compañeros para crear un circulo de confianza** 
      * [Tutorial](https://gist.github.com/F21/b0e8c62c49dfab267ff1d0c6af39ab84)
 
  

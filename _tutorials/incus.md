@@ -59,7 +59,7 @@ $ incus list -c n -f csv
 $ incus exec <instance> -- <command> --force-noninteractive
 $ incus exec <instance> -- <command>
 ```
- ## Global config
+ ### Global config
  ```bash
 $ incus config show
 $ incus config set core.http-address :8443
@@ -79,6 +79,7 @@ $ incus file push <source file> <instance>/<path> --gid 1001 --uid 1001
  ```bash
 $ incus profile list
 $ incus profile show default
+$ incus profile at
 ``` 
  ### Network
  #### Managed bridged network
@@ -173,7 +174,25 @@ $ incus config device remove win11 install
 $ incus config device remove win11 virtio
 $ incus publish win11 --alias win11-image
  ```
+### Running Graphical Applications in Incus Containers
+* Descargar _X11.profile_
+```bash
+$ wget -O ~/X11.profile https://raw.githubusercontent.com/ASIR2-SGD/asir2-sgd.github.io/refs/heads/main/resources/files/X11.profile
+```
+* Crear un perfil para poder ejecutar aplicaciones gráficas en un contenedor
+
+```bash
+$ incus profile create X11 < X11.profile
+```
+* Lanzar la imagen con el nuevo _profile_
+```bash
+$ incus launch images:ubuntu/noble/cloud --profile default --profile X11 gui
+```
+
+
+
  ### Anexo I. Links
  * [linux containers](https://images.linuxcontainers.org/)
+ * [# Running Graphical Applications in Incus Containers](https://regrow.earth/blog/2024-10-29_gui-apps-in-incus-containers/)
  
  
