@@ -14,7 +14,10 @@
 * [ACL]({% link _tutorials/sistema_de_ficheros_permisos_acl.md %}) 
 ## Protección de datos
 * [LVM]({% link _tutorials/LVM.md %}) 
-* [RAID]({% link _tutorials/RAID.md %}) 
+
+## Criptografia
+* [GPG]({% link _tutorials/GPG.md %}) 
+
 ## Firewall
 * [Cortafuegos con iptables]({% link _tutorials/firewall.md %})
 

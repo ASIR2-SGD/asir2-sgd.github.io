@@ -81,6 +81,11 @@ $ incus profile list
 $ incus profile show default
 $ incus profile at
 ``` 
+### Shared folders
+```bash
+incus config device add <instance> mysharedfolder disk source=/home/<host_user>/incus_shared/ path=/tmp shift=true
+```
+
  ### Network
  #### Managed bridged network
 > [!NOTE]
