@@ -79,11 +79,24 @@ $ incus file push <source file> <instance>/<path> --gid 1001 --uid 1001
  ```bash
 $ incus profile list
 $ incus profile show default
-$ incus profile at
+$ incus profile edit <profile_name>
+$ incus profile create <profile_name> << EOF
+devices:
+	shared_dir:
+		path: /shared_container
+		shift: "true"
+		type: disk
+		source: /source_host
+EOF
+
+
 ``` 
 ### Shared folders
 ```bash
-incus config device add <instance> mysharedfolder disk source=/home/<host_user>/incus_shared/ path=/tmp shift=true
+$ incus config device add <instance> mysharedfolder disk source=/home/<host_user>/incus_shared/ path=<instance path> shift=true
+$ incus config set <instance> raw.idmap "both 1000 2000"
+$ incus config set <instance> raw.idmap "uid 50-60 500-510"
+$ incus config set <instance> raw.idmap "gid 100000-110000 10000-20000"
 ```
 
  ### Network

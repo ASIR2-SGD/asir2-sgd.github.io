@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Redundancia de datos y volúmenes lógicos
+title: GPG. Pretty Good Privacy
 ---
 # Práctica GPG. Pretty Good Privacy
 

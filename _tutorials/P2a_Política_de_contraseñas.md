@@ -1,3 +1,7 @@
+---
+layout: default
+title: Política de contraseñas
+---
 # Política de contraseñas
 
 ## Contexto

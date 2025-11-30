@@ -1,3 +1,7 @@
+---
+layout: default
+title: Redundancia de datos y volúmenes lógicos
+---
 # Práctica 2b. Verificacion en dos pasos
 
 ## Contexto

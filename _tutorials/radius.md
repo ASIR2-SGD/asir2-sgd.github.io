@@ -1,3 +1,7 @@
+---
+layout: default
+title: Radius
+---
 # Práctica radius.
 ## Implementación de un servidor de autenticación basando en raidus e integración con LDAP
 
