@@ -32,3 +32,6 @@
 * [Mimir config file]({% link _extra/mimir_config.md %})
 * [Cloud init example]({% link _extra/profile-cloud-init.md %})
 
+### Anexo II. Misc
+* [sshfs mount config]({% link _extra/sshfs.md %})
+
