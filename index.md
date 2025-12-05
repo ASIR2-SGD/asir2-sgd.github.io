@@ -16,7 +16,8 @@
 * [LVM]({% link _tutorials/LVM.md %}) 
 
 ## Criptografia
-* [GPG]({% link _tutorials/GPG.md %}) 
+* [GPG]({% link _tutorials/GPG.md %})
+* [PKI / OpenSSLGPG]({% link _tutorials/openssl-pki.md %})
 
 ## Firewall
 * [Cortafuegos con iptables]({% link _tutorials/firewall.md %})
