@@ -4,7 +4,8 @@ title: PKI. OpenSSL Simple PKI
 ---
 # Simple PKI(Public Key Infraestrucutra) with OpenSSL
 
- >[!INFO] OpenPGP is the most widely used email encryption standard. It is defined by the OpenPGP Working Group of the Internet Engineering Task Force (IETF) as a Proposed Standard in [RFC 9580](https://www.rfc-editor.org/rfc/rfc9580.htm)
+ >[!NOTE]
+ > OpenPGP is the most widely used email encryption standard. It is defined by the OpenPGP Working Group of the Internet Engineering Task Force (IETF) as a Proposed Standard in [RFC 9580](https://www.rfc-editor.org/rfc/rfc9580.htm)
 
 ![PKI Process](https://pki-tutorial.readthedocs.io/en/latest/_images/PKIProcess.png)
 1.A requestor generates a CSR and submits it to the CA.
@@ -131,7 +132,9 @@ Documentos/SAD/certs <-certificados firmados por CA de clase
 └── private			<- clave privada
 ```
 
->[!NOTE] Utiliza el comando `sshfs` para _montar_ una carpeta compartida con el servidor via ssh
+>[!TIP]
+> Utiliza el comando `sshfs` para _montar_ una carpeta compartida con el servidor via ssh
+---
 ```bash
 sshfs -o allow_other,default_permissions ubuntu@ip:/home/ubuntu/pki/requests ~/certs/requests
 sshfs -o allow_other,default_permissions ubuntu@ip:/home/ubuntu/pki/issued ~/certs/issued
