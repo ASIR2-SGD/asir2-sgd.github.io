@@ -8,6 +8,7 @@ title: PKI. OpenSSL Simple PKI
  > OpenPGP is the most widely used email encryption standard. It is defined by the OpenPGP Working Group of the Internet Engineering Task Force (IETF) as a Proposed Standard in [RFC 9580](https://www.rfc-editor.org/rfc/rfc9580.htm)
 
 ![PKI Process](https://pki-tutorial.readthedocs.io/en/latest/_images/PKIProcess.png)
+
 1.A requestor generates a CSR and submits it to the CA.
 2.The CA issues a certificate based on the CSR and returns it to the requestor.
 3.Should the certificate at some point be revoked, the CA adds it to its CRL.

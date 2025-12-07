@@ -111,10 +111,38 @@ $ incus network create asirnetwork \
       ipv4.address=<ip/prefix> \
       ipv6.address=none ipv4.nat=true \ 
       ipv4.dhcp.ranges = <ip-first>-<ip-last> \
-      ipv4.dhcp.routes=<network>,<next-hop>, 0.0.0.0,<default_gw> 
-$ incus network attach <network> <instance>
+      ipv4.dhcp.routes=<network>,<next-hop>, 0.0.0.0/0,<default_gw> 
+$ incus network attach <network> <instance> [<device_name>] [<interface_name>]
+$ incus config device add <instance_name> <device_name> nic network=<network_name>
 $ incus network delete <network>
-``` 
+```
+**Ejemplos**
+* Crea red _LAN_ (192.168.82.0/24)
+```bash
+$ incus network create LAN \
+	 ipv4.address=192.168.82.1/24 \
+	 ipv6.address=none ipv4.nat=true \
+	 ipv4.dhcp.ranges=192.168.82.150-192.168.82.220
+```
+* Asocia network _LAN_ con nuevo interfaz _eth2_
+```bash
+$ incus network attach LAN c1 eth2
+$ incus config device add c1 eth1 nic network=LAN
+```
+
+* Asocia mediante una conexion _macvlan_ la interfaz física _enp1s0_ con _eth2_
+```bash
+$ incus network attach enp1s0 c1 eth2
+$ incus network detach enp1s0 c1
+$ incus config device add c1 eth3 nic name=eth3 nictype=macvlan parent=enp1s0
+$ incus config device remove c1 eth
+```
+* Asocia mediante una conexion _physical_ la interfaz física _enp1s0_ con _eth2_
+```bash
+$ incus config device add c1 eth3 nic name=eth3 nictype=pyshical parent=enp1s0
+$ incus config device remove c1 eth
+```
+
 
  #### Unmanaged bridged network (using `nmcli` (NetworkManager))
 >[!NOTE]
