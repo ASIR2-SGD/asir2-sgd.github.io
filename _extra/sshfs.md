@@ -29,7 +29,7 @@ incus exec c1 -- bash -c 'apt-get install aptitude sshfs wget vim nano git bash-
 ## Conecta con el servidor mediante comando sshfs 
 ```bash
 incus exec c1 -- bash -c 'mkdir -p ~/gpg'
-incus exec c1 -- bash -c 'sed  -e -i "s/#\(user_allow_other\)/\1/" /etc/fuse.conf'
+incus exec c1 -- bash -c 'sed  -i -e "s/#\(user_allow_other\)/\1/" /etc/fuse.conf'
 incus exec c1 -- bash -c 'sshfs -o allow_other,default_permissions ubuntu@ip:/home/ubuntu/gpg ~/gpg'
 ```
 

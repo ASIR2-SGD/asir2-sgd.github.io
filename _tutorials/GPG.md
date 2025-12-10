@@ -129,11 +129,27 @@ En esta práctica se trabajará sobre estos cuatro conceptos mediante la herrami
 4. ¿Quién ha firmado el mensaje?
 
 
-### Mailevelope
+### Mailvelope
  * Importar clave privada
- * Subir clave pública al keyserver de mailevelope
- * Importar claves publicas
- * Enviar un mensaje cifrado y descifrar mensaje.  
+    * Instalado el plugin para el navegador importamos nuestra clave privada mediante el portapapeles o mediante fichero.
+    ```bash
+    gpg --armour --export <key-id> --output <public_key_name.pub.asc>
+    gpg --armour --export-secret-keys <key-id> --output <private_key_name.pub.asc>    
+    ```
+    Alternativamente, podemos usar la utilidad _xsel_ para copiarla al portapapeles de forma rápida
+    ```bash
+    gpg --amrour --export-secret-keys <key-id> | xsel --clipboard
+    ```
+ * Subimos nuestra cláve pública al servidor de _mailvelope_ para que los demás puedan descargarsela de forma rápida
+    * Obtenemos el _key-id_ listando la clave asociada a mi e-mail y la subimos al servidor de _mailvelope_
+ ```bash  
+ gpg --list-key <e-mail>
+ gpg --keyserver hkps://keys.mailvelope.com --send-keys <key-id>
+ ```
+    * Alternativamente, si este método no funciona hay que copiar la clave en el portapapeles y subirla a través de la [página web](https://keys.mailvelope.com/manage.html), la clave pública, no se hara visible hasta que no se confirme el correo enviando de _mailevelope_
+
+ * Obtenemos la clave pública del profesor (c.sanchezgarcia@edu.gva.es) del servidor de _mailvelope_
+ * Envia un mensaje a c.sanchezgarcia2@edu.gva.es firmado por tí que demuestre la _autoría_ del mensaje y cifrado con la clave pública del profesor que asegure la confidencialidad. 
 
 ### Firma claves de compañeros para crear un circulo de confianza
 [Tutorial](https://gist.github.com/F21/b0e8c62c49dfab267ff1d0c6af39ab84)
