@@ -41,7 +41,6 @@ pki
 ├── crl
 ├── etc
 └── sign_req.sh
-
 ```
 # Comandos openssl
 **Crear par de claves privada/pública**
@@ -53,12 +52,12 @@ openssl genrsa -out $(whoami)_key.key 2048
 ```
 **Obtener clave pública a partir de par de claves.**
 ```bash
-openssl pkey -pubout -in private.key -out pub_key.pu
+openssl pkey -pubout -in private.key -out pub_key.pub
 ```
 **Crear CSR**
 ```bash
 openssl req -new -key $(whoami)_key.key -out pki/requests/$(whoami)_request.csr
-openssl req -new -key $(whoami)_key.key -config my_config.conf -out pki/requests/$(whoami)_request.csr
+openssl req -new -key $CERTS_DIR/private/$(whoami)_key.key -config $CERTS_DIR/etc/my_config.conf -out $CERTS_DIR/csr/$(whoami)_request.csr
 ```
 **Ver CSR**
 ```bash
@@ -111,13 +110,11 @@ El comando anterior se utiliza para firmar documentos, este genera un hash del d
 Utilizaremos la utilidad [open-pdf-sign](https://github.com/open-pdf-sign/open-pdf-sign) para firmar documentos _pdf_
 
 ```bash
-mkdir -p ~/bin && cd ~/bin
-wget https://github.com/open-pdf-sign/open-pdf-sign/releases/download/v0.3.0/open-pdf-sign.jar
-echo 'PATH=$PATH:~/bin'
-java -jar open-pdf-sign.jar --add-page --page -1 --timestamp --input document.pdf --output document_signed.pdf --certificate certificate.crt --key private.key 
+$ mkdir -p ~/bin && cd ~/bin
+$ wget https://github.com/open-pdf-sign/open-pdf-sign/releases/download/v0.3.0/open-pdf-sign.jar
+$ echo 'PATH=$PATH:~/bin'
+$java -jar open-pdf-sign.jar --add-page --page -1 --timestamp --input document.pdf --output document_signed.pdf --certificate certificate.crt --key private.key 
 ```
-
-
 
 
 
@@ -125,10 +122,11 @@ java -jar open-pdf-sign.jar --add-page --page -1 --timestamp --input document.pd
 Crea un breve documento en formato _Markdown_ indicando brevemente los pasos y los comandos llevados a cabo. El documento debe ser coherente y con sentido. 
 Genera y firma el documento
 * Crea la siguiente estructura de ficheros y directorios
+
 ```bash
 Documentos/SAD/certs <-certificados firmados por CA de clase
-├── csr  			<- enlace via ssshfs a la carpeta pki/certs/requests de shared  
-├── issued_by_CA 	<- enlace via ssshfs a la carpeta pki/certs/issued de shared  
+├── csr  			<- enlace via ssshfs a la carpeta pki/certs/requests de sshfs  
+├── signed      	<- enlace via ssshfs a la carpeta pki/certs/issued de sshfs 
 ├── etc				<- configuración
 └── private			<- clave privada
 ```
@@ -137,8 +135,8 @@ Documentos/SAD/certs <-certificados firmados por CA de clase
 > Utiliza el comando `sshfs` para _montar_ una carpeta compartida con el servidor via ssh
 ---
 ```bash
-sshfs -o allow_other,default_permissions ubuntu@ip:/home/ubuntu/pki/requests ~/certs/requests
-sshfs -o allow_other,default_permissions ubuntu@ip:/home/ubuntu/pki/issued ~/certs/issued
+sshfs -o allow_other,default_permissions ubuntu@ip:/home/ubuntu/pki/requests ~/certs/csr
+sshfs -o allow_other,default_permissions ubuntu@ip:/home/ubuntu/pki/issued ~/certs/signed
 ```
 
 

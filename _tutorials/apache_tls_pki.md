@@ -2,7 +2,7 @@
 layout: default
 title: Apache TLS
 ---
-# Práctica 3b. Autoridades certificadoras (CA) y Public Key Infrastructure (PKI) y Apache TLS
+# Apache TLS / PKI(Public Key Infrastructure)
 
 ## Contexto
 Autoridades certificadoras son las responsables de emitir certificados digitales para verificar identidades en internet (servidores, personas, conexiones).
@@ -31,25 +31,35 @@ El certificado digital que usaremos deberá estar firmado por una Autoridad Cert
 
 ## Desarrollo
 
-##Pasos previos
-* Configurar VM con ip pública de aula
-* Configurar NFS Server en cada máquina
-* Configurar NFS Client a CA_TEAM y CA_CENTRAL
-
-##Pasos CA
-* Crear y configurar Certification Authority (CA Server)
+Para simular un entorno más real, configuraremos nuestro contenedor de Apache con una _ip_ del aula, para crearemos un _bridge_ entre el interfaz virtual _eth0_ y nuestro interfaz real. Esto en incus es muy sencillo con el comando
+```bash
+$ incus network list
+$ incus launch images:ubuntu/noble apache --network <interfaz_host> 
+```
 
 >[!NOTE]
-> Obtenemos (ca.crt y ca.key) Explicar que es cada fichero
+> Por defecto, la dirección ip la cogerá mediante _dhcp_ de la _gw_ del aula como si se tratase de un _host_ más.
+> Si necesitamos una ip _static_ deberemos editar el fichero _/etc/netplan/10-lxc.yaml_
 
-* Compartir certificado digital de la autoridad certificadora (ca.crt) 
+La _CA_ denominada _pki_ comparte dos carpetas para que podamos enviarle nuestras peticiones de firma _requests_ y obtener los cetificados firmados _issued_. Ámbas carpetas se encuentran en la carpeta _/home/ubuntu/pki/certs_
+Accede a ellas de forma fácil mediante _sshfs_
+```bash
+$ sshfs -o allow_other,default_permissions ubuntu@ip:/home/ubuntu/pki/requests /home/ubuntu/certs/csr/
+$ sshfs -o allow_other,default_permissions ubuntu@ip:/home/ubuntu/pki/issued /home/ubuntu/certs/signed/
+```
 
+>[!TIP]
+>Mejora la práctica y tu puntuación en ella haciendo los puntos de monaje persistentes, es decir que se creen cuando arranca el sistema.
 
-##Pasos solicitante
-* Instalar  certificado digital de la autoridad certificadora en el sistema
-* Crear solicitud de certificado (CSR)
-* Enviar solicitud a CA
-* Firmada la solictud configurar apache para uso de HTTPS 
+Crea un CSR para tu servidor, ver práctica [PKI / OpenSSL]({% link _tutorials/openssl-pki.md %})
+
+*TODO*
+
+* Configura Apache para crear una conexión segura TLS
+	* Instalar  certificado digital de la autoridad certificadora en el sistema
+	* Crear solicitud de certificado (CSR)
+	* Enviar solicitud a CA
+	* Firmada la solictud configurar apache para uso de HTTPS 
 
 >[!WARNING]
-> Verificar y demostrar que sompos capaces de establecer conexiones seguras HTTPS con nuestro servidor web y que el certificado de nuestro servidor web está firmado por la CA de clase.
+> ...
