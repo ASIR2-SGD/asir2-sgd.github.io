@@ -146,13 +146,12 @@ sshfs -o allow_other,default_permissions ubuntu@ip:/home/ubuntu/pki/issued ~/cer
 wget https://raw.githubusercontent.com/ASIR2-SGD/asir2-sgd.github.io/refs/heads/main/resources/files/openssl-server.conf
 ```
 
-* Crea una petición csr para tu servidor web indicando un supuesto nombre de domino e ip para ser firmada (creala en la carpeta destinada a tal fin)
 * Espera a que tu petición sea firmada y utilizando comandos openssl indica:
 	* Nombre de la CA que ha firmado el certificado(emissor/issuer)
 	* Validez del certificado
-	* hash del CA emissor
+	* Hash del CA emissor
 
-* Firma el documento pdf con tu certificado.
+* Completa la memoria y firma el documento pdf con tu certificado.
 
 
 
