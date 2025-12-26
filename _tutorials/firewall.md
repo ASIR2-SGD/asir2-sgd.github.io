@@ -33,15 +33,16 @@ $ incus exec firewall -- bash -c 'systemctl enable nftables.service'
 $ incus launch images:ubuntu/noble lan1 --network ovs-br0
 ```
 
-> :notebook: **Actividad** 
-* El interfaz _eth1_ que conecta con la LAN tiene que tener una ip estática, lleva a cabo la configuración de red apropiada para dicha interfaz y aplicando los cambios mediante la utilidad _netplan_. 
-La ip para el interfaz _eth1_ debe ser 10.10.82.1. 
-Los cambios en la configuración de red se llevarán a cabo editando el fichero _/etc/netplan/10-lxc.yaml_
-* El _firewall_ deberá implementar funcionalidad DHCP para proveer a sus clientes LAN de ip dinámica. Lleva a cabo la configuración del servidor DHCP usando _dnsmasq_.
-Lleva a cabo la configuración y comprueba que los clientes LAN obtienen una ip de la red 10.10.82/0
+> [!IMPORTANT]
+> **Actividad** 
+> * El interfaz _eth1_ que conecta con la LAN tiene que tener una ip estática, lleva a cabo la configuración de red apropiada para dicha interfaz y aplicando los cambios mediante la utilidad _netplan_. 
+> La ip para el interfaz _eth1_ debe ser 10.10.82.1. 
+> Los cambios en la configuración de red se llevarán a cabo editando el fichero _/etc/netplan/10-lxc.yaml_
+> * El _firewall_ deberá implementar funcionalidad DHCP para proveer a sus clientes LAN de ip dinámica. Lleva a cabo la configuración del servidor DHCP usando _dnsmasq_.
+> Lleva a cabo la configuración y comprueba que los clientes LAN obtienen una ip de la red 10.10.82/0
 
->[!WARNING]
->El servidor DNS de _dnsmasq_ colisiona a hacer uso que el mismo puerto 53 que el servicio _systemd-resolve_, para evitar este problema y que ambos servidores DNS funcionen correctamente, deberás descomentar en el fichero _/etc/dnsmasq.conf_ la linea _bind-interfaces_ y asignar la interfaz _lan_ como la interfaz de escucha de peticiones DNS y DHCP 
+> [!WARNING]
+> El servidor DNS de _dnsmasq_ colisiona a hacer uso que el mismo puerto 53 que el servicio _systemd-resolve_, para evitar este problema y que ambos servidores DNS funcionen correctamente, deberás descomentar en el fichero _/etc/dnsmasq.conf_ la linea _bind-interfaces_ y asignar la interfaz _lan_ como la interfaz de escucha de peticiones DNS y DHCP 
 
 
 Para que el _fw_ actue como router y redirecciones los paquetes a la itnerfaz de salida apropiada, debemos activar _forwarding_
@@ -127,13 +128,14 @@ nft list sets
 
 
 
-> :notebook: **Actividad** 
-* Crea una tabla denominada _asir2_table_ para los paquets ipv4 e ipv6 , dentro de ella una cadena denomindada _asir2_chain_ asociada al _hook_ output con política por defecto _reject_
-	* ¿Qué significa esto?
-	* Propón algún ejemplo práctico con algún comando básico que permita demostrar el efecto de estas reglas.
-* Crea un conjunto _set_ de direcciones ipv4 denominado ip_admin, añade varias direcciones en él.
-	* Comprueba que efectivamente se han creando los conjuntos de valores.
-	* Propón y crea un conjunto de valores (no basado en direcciones ip) que creas puede ser de utilidad en la definición de reglas de un cortafuegos. Justifica tu respuesta.
+> [!IMPORTANT]
+> **Actividad** 
+> * Crea una tabla denominada _asir2_table_ para los paquets ipv4 e ipv6 , dentro de ella una cadena denomindada _asir2_chain_ asociada al _hook_ output con política por defecto _reject_
+>	* ¿Qué significa esto?
+>	* Propón algún ejemplo práctico con algún comando básico que permita demostrar el efecto de estas reglas.
+> * Crea un conjunto _set_ de direcciones ipv4 denominado ip_admin, añade varias direcciones en él.
+>	* Comprueba que efectivamente se han creando los conjuntos de valores.
+>	* Propón y crea un conjunto de valores (no basado en direcciones ip) que creas puede ser de utilidad en la definición de reglas de un cortafuegos. Justifica tu respuesta.
 
 
 
@@ -163,11 +165,12 @@ vagrant@lan:$ ping 10.0.200.100
 vagrant@lan:$ ping 192.168.82.100
 vagrant@lan:$ ping yahoo.es
 ```
->[!IMPORTANT]
->Es importante verificar que lo hecho hasta ahora funciona correctamente apagadas las máquinas.
->Reinícilas _vagrant reload_ y prueba conctividad de nuevo.
 
->[!NOTE]
+> [!IMPORTANT]
+> Es importante verificar que lo hecho hasta ahora funciona correctamente apagadas las máquinas.
+> Reinícilas _vagrant reload_ y prueba conctividad de nuevo.
+
+> [!NOTE]
 > El alumno deberá implementar el resto de reglas según se detalla en el siguiente apartado.
  
 
