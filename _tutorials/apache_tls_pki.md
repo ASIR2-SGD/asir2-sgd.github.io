@@ -112,5 +112,10 @@ Habilita las conexione SSL en tu servidor apache usando el certificado firmado
 
 * Crea una página web de prueba y comprueba desde el navegador, que efectivamente las conexiones son seguras 
 
+* Añade el certificado raiz al navegador
+    * Firefox [tutorial](https://stackoverflow.com/questions/1435000/programmatically-install-certificate-into-mozilla)
+    * Chrome [tutorial](https://stackoverflow.com/questions/19692787/how-to-install-certificate-in-browser-settings-using-command-prompt)
+
+
 *TODO*
 Memoria firmada

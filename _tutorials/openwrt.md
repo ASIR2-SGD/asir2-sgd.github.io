@@ -15,8 +15,11 @@ $ incus network create LAN \
 ```
 
 ```bash
-$ incus launch images:openwrt/24.10 openwrt
+$ incus launch images:openwrt/24.10 openwrt 
+
 $ incus config device add openwrt eth1 nic network=LAN
+$ incus config device add openwrt eth1 nic name=eth1 nictype=bridged parent=ovs-br0
+$ incus config device add openwrt eth1 nic name=eth1 nictype=macvlan parent=eth1 
 ```
 
 >[!WARNING]
@@ -26,8 +29,8 @@ $ incus config device add openwrt eth1 nic network=LAN
 
  ```bash
 $ incus exec openwrt -- ash -c 'cat << EOF >> /etc/config/network 
-config interface lan
-        option infname eth1
+config interface 'lan'
+        option ifname eth1
         option proto dhcp
 EOF
 '

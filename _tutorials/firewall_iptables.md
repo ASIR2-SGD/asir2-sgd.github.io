@@ -8,6 +8,10 @@ title: "firewall"
 ## Contexto
 Los cortafuegos se utilizan con frecuencia para evitar que otros  usuarios de Internet no autorizados tengan acceso a las redes privadas  conectadas a Internet. Estos suelen actuar como un organismo de  inspección que verifica las conexiones que se establecen entre una red y un equipo local. Un cortafuegos regula, por lo tanto, la comunicación  entre ambos para proteger el ordenador contra programas maliciosos u  otros peligros de Internet.
 
+## Links
+* [iptables-essentials](https://www.digitalocean.com/community/tutorials/iptables-essentials-common-firewall-rules-and-commands)
+* [How To Implement a Basic Firewall Template with Iptables on Ubuntu 20.04](https://www.digitalocean.com/community/tutorials/how-to-implement-a-basic-firewall-template-with-iptables-on-ubuntu-20-04)
+* [iptables, un manual sencillo](https://fp.josedomingo.org/seguridadgs/u03/iptables.html)
 
 ## Objetivos
 * Virtualizar el escenario necesario para llevar a cabo la práctica
@@ -17,137 +21,126 @@ Los cortafuegos se utilizan con frecuencia para evitar que otros  usuarios de In
 
 ## Desarrollo
 
-### Prepapración del escenario virtual
-Para llevar a cabo la práctica necesitamos tres contenedores (_firewall_ , _lan1_ y _lan2_) y un switch virtual (_ovs-br0_)
+### Preapración del escenario virtual del escenario
 
-
-**TODO. DIAGRAMA RED**
-
+Instalamos el paquete _iptables-persistent_
 ```bash
-$ incus launch images:ubuntu/noble firewall
-$ incus config device override firewall eth0 name=wan
-$ incus config device add firewall eth1 nic nictype=bridged parent=ovs-br0
-$ incus exec firewall -- bash -c 'apt-get update && apt-get -y install  aptitude wget bash-completion nano xsel vim dns-masq nftables' 
-$ incus exec firewall -- bash -c 'systemctl enable nftables.service'
-
-$ incus launch images:ubuntu/noble lan1 --network ovs-br0
+vagrant@fw sudo apt install iptables-persistent
 ```
 
-> :notebook: **Actividad** 
-* El interfaz _eth1_ que conecta con la LAN tiene que tener una ip estática, lleva a cabo la configuración de red apropiada para dicha interfaz y aplicando los cambios mediante la utilidad _netplan_. 
-La ip para el interfaz _eth1_ debe ser 10.10.82.1. 
-Los cambios en la configuración de red se llevarán a cabo editando el fichero _/etc/netplan/10-lxc.yaml_
-* El _firewall_ deberá implementar funcionalidad DHCP para proveer a sus clientes LAN de ip dinámica. Lleva a cabo la configuración del servidor DHCP usando _dnsmasq_.
-Lleva a cabo la configuración y comprueba que los clientes LAN obtienen una ip de la red 10.10.82/0
+Eliminamos la puerta de enlace del interfaz eth0 (nat) para evitar confusiones durante la práctica
 
->[!WARNING]
->El servidor DNS de _dnsmasq_ colisiona a hacer uso que el mismo puerto 53 que el servicio _systemd-resolve_, para evitar este problema y que ambos servidores DNS funcionen correctamente, deberás descomentar en el fichero _/etc/dnsmasq.conf_ la linea _bind-interfaces_ y asignar la interfaz _lan_ como la interfaz de escucha de peticiones DNS y DHCP 
+```bash
+vagrant@lan sudo route del default gw 10.0.2.2
+vagrant@fw sudo route del default gw 10.0.2.2
+vagrant@dmz sudo route del default gw 10.0.2.2
+```
+Para eliminar la puerta de enlace nat de forma permanente, debemos crear un script que se ejecute en cada arranque
 
 
+Añadimos las puertas de enlace necesarias para la práctica.
+
+```bash
+vagrant@lan:$ sudo route add default gw 10.0.82.1
+vagrant@dmz:$ sudo route add default gw 10.0.200.1
+vagrant@fw:$ sudo route add default gw 192.168.82.100
+```
+Estos cambios no añaden la ruta por defecto de forma permanente y se borra en cada reinicio. Deberemos añadirla en un nuevo fichero de netplan, ya que vagrant modifica le fichero _50-vagrant.yaml_ en cada reinicio
+```bash
+vagrant@lan:$ sudo vi /etc/netplan/60-routes.yaml
+```
+
+```bash
+---
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    eth1:
+      routes:
+      - to: default
+        via: 10.0.82.1
+
+```
+
+Ejecutamos _netplan try_ para verificar la sintaxis
+```bash
+vagrant@lan:$ sudo netplan try
+```
+Aplicamos los cambios
+```bash
+vagrant@lan:$ sudo netplan apply
+```
+Realizamos la misma operación en las máquinas _fw_,_dmz_ y _ldap_ modificando la puerta de enlace y el interfaz en caso del _fw_
+
+```bash
+vagrant@fw:$ sudo vi /etc/netplan/60-routes.yaml
+```
+
+```bash
+---
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    eth3:
+      routes:
+      - to: default
+        via: 192.168.82.100
+
+```
+
+```bash
+vagrant@dmz:$ sudo vi /etc/netplan/60-routes.yaml
+```
+
+```bash
+---
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    eth1:
+      routes:
+      - to: default
+        via: 10.0.200.1
+
+```
+
+```bash
+vagrant@ldap:$ sudo vi /etc/netplan/60-routes.yaml
+```
+
+```bash
+---
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    eth1:
+      routes:
+      - to: default
+        via: 10.0.82.1
+
+```
 Para que el _fw_ actue como router y redirecciones los paquetes a la itnerfaz de salida apropiada, debemos activar _forwarding_
 De forma temporal mediante el comando
 ```bash
-firewall# sysctl -w net.ipv4.ip_forward=1
+vagrant@fw:$sudo sysctl -w net.ipv4.ip_forward=1
 ```
 Hacemos el cambio persistente editando el fichero _/etc/sysctl.conf_ y descomenta la linea 28
 
 ```bash
-firewall# vi /etc/sysctl.conf
+vagrant@fw:$sudo vi /etc/sysctl.conf
 28 net.ipv4.ip_forward=1
 ```
 Reiniciar el servicio _systemd-sysctl_
 ```bash
-firewall# systemctl restart systemd-sysctl.service 
-```
-## Netfilter
-
-Netfilter es una infraestructura integrada en el kernel de linux que permite interceptar y manipular paquetes de red, actuando como el motor principal de un _firewall_ para filter el tráfico y realizar NAT, utilizando herramientas como _iptables o _nfttables_ para definir políticas y réglas sobre los interfaces de red, organizadas en tablas y cadenas.
-Netfilter maneja el trafico de red en diferentes puntos (__hooks__) a medida que pasa por el sistema. _nftables_ y su antecesor _iptables_ nos permite a nivel de usuario _anclar_ una cadena de reglas (callback function) en cada uno de los _hooks_ pudiendo descartar o aceptar paquetes según la política de seguridad deseada
-
-
-![Netfilter hooks -simple block diagram](https://thermalcircle.de/lib/exe/fetch.php?w=700&tok=37d6df&media=linux:nf-hooks-simple1.png)
-
-
-## Nftables
-
-
->[!TIP]
->Activa el autocompletado de comandos para el comando _nft_ descargandote el siguiente fichero en la carpeta _/etc/bash_completion.d/_
->`wget -O /etc/bash_completion.d/nft-completion https://raw.githubusercontent.com/Zulugitt/bash_completion/refs/heads/main/nft-completion`
-
-
-### Conceptos básicos de nftables
-Para el correcto manejo de nftables, es necesario entender su estructura básica, incluyendo tablas, cadenas, reglas y conjuntos
-
-![tables, chains and rules](https://miro.medium.com/v2/resize:fit:720/format:webp/1*PUrIVW5lk0vlevTp6hQOzA.png)
-
-* Tablas: Agrupación lógica de cadenas y reglas relacionadas
-* Cadenas: Lista de reglas dentro de una tabla. Define los puntos(hooks) dentro de la linea de procesamiento del paquete donde las reglas son aplicadas. Las más comunes son:
-	* **input**: Para paquetes destinados al procesamiento local
-	* **output**: Para paquetes originados en el sistema local
-	* **foward**: Para paquetes siendo enrutados (van de un interfaz a otro)
-	* **prerouting**: Para paquetes antes de tomar una decision de enrutamiento (Usado tipicamente para DNAT)
-	* **postrouting**: Para paquetes despues de tomar una decision de enrutamiento (Usado tipicamente para SNAT)
-* Reglas: Define el criterio de filtrado y acciones a ser tomada en cada paquete. Suele consistir en una condición de coincidencia y us correspondiente acción, aceptar o descartar.
-* Conjuntos: Permite agrupar múltiples elementos tales como ip's, puertos o direcciones MAC en un único objeto que puede ser referenciado en las reglas. Permite manejar un número complejo de reglas de forma más sencilla y eficiente.
-
-![Essential Nfttables ruleset ](https://thermalcircle.de/lib/exe/fetch.php?w=700&tok=277ef3&media=linux:nf-hooks-nftables-ex2.png)
-
-### Manejo básico de nftables 
-
-```bash
-nft list ruleset
-nft flush ruleset
-nft list ruleset > /etc/nftables.conf
-```
-
-#### Creando tablas y cadenas.
-```bash
-nft list tables
-nft list table ip filter
-nft add table <family> <name>
-nft add table ip filter 
-
-nft list chains
-nft add chain <family> <table> <chain>
-nft add chain ip filter input
-nft add table ip nat 
-nft add chain ip nat postrouting { type nat hook postrouting priority 100 \; policy accept \; }
-```
-
-#### Creando conjuntos (sets)
-```bash
-nft add set inet example_table example_set { type ipv4_addr \; }
-nft add set inet example_table example_set { type ipv4_addr \; flags interval \; } #permite rango ip
-nft add element inet example_table example_set { 192.0.2.1, 192.0.2.2 }
-nft add element inet example_table example_set { 192.0.2.0-192.0.2.255 }
-nft list sets
-```
-
-
-
-
-> :notebook: **Actividad** 
-* Crea una tabla denominada _asir2_table_ para los paquets ipv4 e ipv6 , dentro de ella una cadena denomindada _asir2_chain_ asociada al _hook_ output con política por defecto _reject_
-	* ¿Qué significa esto?
-	* Propón algún ejemplo práctico con algún comando básico que permita demostrar el efecto de estas reglas.
-* Crea un conjunto _set_ de direcciones ipv4 denominado ip_admin, añade varias direcciones en él.
-	* Comprueba que efectivamente se han creando los conjuntos de valores.
-	* Propón y crea un conjunto de valores (no basado en direcciones ip) que creas puede ser de utilidad en la definición de reglas de un cortafuegos. Justifica tu respuesta.
-
-
-
-
-
-
-nft add rule ip nat postrouting oifname "wan" masquerade
-
-
-
+vagrant@fw:$sudo systemctl restart systemd-sysctl.service 
 ```
 Para navegar en la internet, necesitamos utilizar una ip pública, para ello activaremosa traducción de direcciones privadas a públicas (NAT) en el cortafuegos
 ```bash
-firewall# iptables -t nat -A POSTROUTING -o eth3 -j MASQUERADE
+vagrant@fw:$sudo iptables -t nat -A POSTROUTING -o eth3 -j MASQUERADE
 ```
 
 Para guardar la regla anterior de forma persistente, utilizamos el comando _netfilter-persistent_
@@ -216,14 +209,6 @@ TCP es un protocolo basado en conexión, por lo que una conexión ESTABLISHED es
 
 
 ![iptables_conntrack_3]({% link /resources/img/iptables_conntrack_3.png %})
-## Links
-* [iptables-essentials](https://www.digitalocean.com/community/tutorials/iptables-essentials-common-firewall-rules-and-commands)
-* [How To Implement a Basic Firewall Template with Iptables on Ubuntu 20.04](https://www.digitalocean.com/community/tutorials/how-to-implement-a-basic-firewall-template-with-iptables-on-ubuntu-20-04)
-* [iptables, un manual sencillo](https://fp.josedomingo.org/seguridadgs/u03/iptables.html)
-* [Instalación de dnsmasq en Ubuntu 22.04](https://www.ochobitshacenunbyte.com/2024/11/25/dnsmasq-configuracion-de-dns-y-dhcp-en-linux/)
-* [How to use static IP addresses](https://netplan.readthedocs.io/en/stable/using-static-ip-addresses/)
-
-
 ## Anexo II. Comados
 ### Netfilter
 1. Borrado de reglas

@@ -46,6 +46,12 @@ $incus launch images:ubuntu/noble host1 --storage <pool> --device root,size=40Gi
 
 $ incus launch --vm images:ubuntu/noble/desktop desktop -c limits.memory=3GiB -c limits.cpu=4 --console=vga
 $ incus copy <source instance> <dst instance>
+```
+
+### Basic provisioning
+```bash
+incus$ incus exec <instance> -- bash -c 'apt-get update && apt-get -y install  aptitude wget bash-completion gpg nano xsel vim' 
+```
 
 
 ```
@@ -135,7 +141,7 @@ $ incus config device add c1 eth1 nic network=LAN
 $ incus network attach enp1s0 c1 eth2
 $ incus network detach enp1s0 c1
 $ incus config device add c1 eth3 nic name=eth3 nictype=macvlan parent=enp1s0
-$ incus config device remove c1 eth
+$ incus config device remove c1 eth3
 ```
 * Asocia mediante una conexion _physical_ la interfaz física _enp1s0_ con _eth2_
 ```bash

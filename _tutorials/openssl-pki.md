@@ -73,6 +73,11 @@ openssl ca -config etc/signing-ca.conf -in certs/requests/fred.csr -out certs/is
 openssl x509 -text -in yourdomain.crt -noout
 ```
 
+**Verificar certificado en la cadena de confianza (Thrusted Chain)**
+```bash
+openssl verify -CApath /etc/ssl/certs cert_to_be_verified.pem
+```
+
 **Obtener clave pública del par de claves, certificado y CSR**
 ```bash
 openssl pkey -pubout -in private.key -out pub_key.pub
@@ -103,6 +108,7 @@ openssl pkcs12 -export -name "yourdomain-digicert-(expiration date)" \
 **Firmar documentos**
 ```bash
 openssl dgst -sha256 -sign private.key" -out sign.txt.sha256 sign.txt
+openssl dgst -sha256 -verify  <(openssl x509 -in "$(whoami)s Sign Key.crt"  -pubkey -noout) -signature sign.txt.sha256 sign.txt
 ```
 El comando anterior se utiliza para firmar documentos, este genera un hash del documento que es encriptado con la clave privada, creando de esta forma una firma digital. El inconveniente es que la firma y el documento están en ficheros separados.
 
