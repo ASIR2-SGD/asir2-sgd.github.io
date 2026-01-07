@@ -4,14 +4,11 @@ title: PKI. OpenSSL Simple PKI
 ---
 # Simple PKI(Public Key Infraestrucutra) with OpenSSL
 
- >[!NOTE]
- > OpenPGP is the most widely used email encryption standard. It is defined by the OpenPGP Working Group of the Internet Engineering Task Force (IETF) as a Proposed Standard in [RFC 9580](https://www.rfc-editor.org/rfc/rfc9580.htm)
-
 ![PKI Process](https://pki-tutorial.readthedocs.io/en/latest/_images/PKIProcess.png)
 
-1.A requestor generates a CSR and submits it to the CA.
-2.The CA issues a certificate based on the CSR and returns it to the requestor.
-3.Should the certificate at some point be revoked, the CA adds it to its CRL.
+1. A requestor generates a CSR and submits it to the CA.
+2. The CA issues a certificate based on the CSR and returns it to the requestor.
+3. Should the certificate at some point be revoked, the CA adds it to its CRL.
 
 # Simple PKI
 [Tutorial](https://pki-tutorial.readthedocs.io/en/latest/simple/index.html)
@@ -164,43 +161,43 @@ wget https://raw.githubusercontent.com/ASIR2-SGD/asir2-sgd.github.io/refs/heads/
 
 # Glosario de términos
 ## Componentes
-**Public Key Infrastructure (PKI)**
+* **Public Key Infrastructure (PKI)**
 Arquitectura de seguridad donde la credibilidad se obtiene mediante la firma de una CA fiable.
 
-**Certificate Authority (CA)**
+* **Certificate Authority (CA)**
 Entidad que emite certificados y CRL
 
-**Certificate**
+* **Certificate**
 Clave pública e ID vinculados por la firma de una CA
 
-**Certificate Signing Request (CSR)**
+* **Certificate Signing Request (CSR)**
 Petición de solicitud de certificado. Contiene la clave pública y el ID a certificar.
 
-**Certificate Revocation List (CRL)**
+* **Certificate Revocation List (CRL)**
 Lista de los certificados revocados (inválidos). Publicada por la CA a intervalos regulares.
 
 ## Jerarquia PKI
 ![CA Hierarchy](https://www.keytos.io/blog/img/root-ca-vs-issuing-ca.jpg)
 
-**CA Root**
+* **CA Root**
 Una CA que no es certificada por ninguna otra, se basa únicamente en su propia reputación.
 
-**Intermediate CA/subordinate CA**
+* **Intermediate CA/subordinate CA**
 Una CA Certificado por otra se denomina CA subordinada o CA Intermedia
 
-**Singing CA/Issuing CA**
+* **Singing CA/Issuing CA**
 CA en la parte inferior de la jerarquia PKI. Emite los certificados para usuarios,servidores,etc.
 
 ## Formato de ficheros
-**Privacy Enhanced Mail (PEM)**
+* **Privacy Enhanced Mail (PEM)**
 En formato de texto. Codificado Base-64 con lineas de cabecera y pie. Formato preferido en OpenSSL y
 la gran mayoría de software (e.g. Apache mod_ssl, stunnel).
 Es un contenedor para almacenar claves y certificados (cadena de certificados)
 
-**Distinguished Encoding Rules (DER)**
+* **Distinguished Encoding Rules (DER)**
 En binario. Formato preferido en entornos Windows. Tambíen el formato oficial par al descarga de certificados y CRLs.
 
-**Signed Certificate (CRT)**
+* **Signed Certificate (CRT)**
 .crt or .cert son los ficheros firmados por una CA. Solo contiene un solo certificado
 
 # Links
