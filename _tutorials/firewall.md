@@ -2,8 +2,7 @@
 layout: default
 title: "firewall"
 ---
-# Práctica Firewall.
-## Configuración de un cortafuegos basado en iptables
+# Firewall.
 
 ## Contexto
 Los cortafuegos se utilizan con frecuencia para evitar que otros  usuarios de Internet no autorizados tengan acceso a las redes privadas  conectadas a Internet. Estos suelen actuar como un organismo de  inspección que verifica las conexiones que se establecen entre una red y un equipo local. Un cortafuegos regula, por lo tanto, la comunicación  entre ambos para proteger el ordenador contra programas maliciosos u  otros peligros de Internet.
@@ -15,51 +14,7 @@ Los cortafuegos se utilizan con frecuencia para evitar que otros  usuarios de In
 * Crear las reglas en iptables
 * Ser capaz de configurar el cortafuegos según las especificaciones del problema
 
-## Desarrollo
 
-### Prepapración del escenario virtual
-Para llevar a cabo la práctica necesitamos tres contenedores (_firewall_ , _lan1_ y _lan2_) y un switch virtual (_ovs-br0_)
-
-
-**TODO. DIAGRAMA RED**
-
-```bash
-$ incus launch images:ubuntu/noble firewall
-$ incus config device override firewall eth0 name=wan
-$ incus config device add firewall eth1 nic nictype=bridged parent=ovs-br0
-$ incus exec firewall -- bash -c 'apt-get update && apt-get -y install  aptitude wget bash-completion nano xsel vim dns-masq nftables' 
-$ incus exec firewall -- bash -c 'systemctl enable nftables.service'
-
-$ incus launch images:ubuntu/noble lan1 --network ovs-br0
-```
-
-> [!IMPORTANT]
-> **Actividad** 
-> * El interfaz _eth1_ que conecta con la LAN tiene que tener una ip estática, lleva a cabo la configuración de red apropiada para dicha interfaz y aplicando los cambios mediante la utilidad _netplan_. 
-> La ip para el interfaz _eth1_ debe ser 10.10.82.1. 
-> Los cambios en la configuración de red se llevarán a cabo editando el fichero _/etc/netplan/10-lxc.yaml_
-> * El _firewall_ deberá implementar funcionalidad DHCP para proveer a sus clientes LAN de ip dinámica. Lleva a cabo la configuración del servidor DHCP usando _dnsmasq_.
-> Lleva a cabo la configuración y comprueba que los clientes LAN obtienen una ip de la red 10.10.82/0
-
-> [!WARNING]
-> El servidor DNS de _dnsmasq_ colisiona a hacer uso que el mismo puerto 53 que el servicio _systemd-resolve_, para evitar este problema y que ambos servidores DNS funcionen correctamente, deberás descomentar en el fichero _/etc/dnsmasq.conf_ la linea _bind-interfaces_ y asignar la interfaz _lan_ como la interfaz de escucha de peticiones DNS y DHCP 
-
-
-Para que el _fw_ actue como router y redirecciones los paquetes a la itnerfaz de salida apropiada, debemos activar _forwarding_
-De forma temporal mediante el comando
-```bash
-firewall# sysctl -w net.ipv4.ip_forward=1
-```
-Hacemos el cambio persistente editando el fichero _/etc/sysctl.conf_ y descomenta la linea 28
-
-```bash
-firewall# vi /etc/sysctl.conf
-28 net.ipv4.ip_forward=1
-```
-Reiniciar el servicio _systemd-sysctl_
-```bash
-firewall# systemctl restart systemd-sysctl.service 
-```
 ## Netfilter
 
 Netfilter es una infraestructura integrada en el kernel de linux que permite interceptar y manipular paquetes de red, actuando como el motor principal de un _firewall_ para filter el tráfico y realizar NAT, utilizando herramientas como _iptables o _nfttables_ para definir políticas y réglas sobre los interfaces de red, organizadas en tablas y cadenas.
@@ -69,7 +24,7 @@ Netfilter maneja el trafico de red en diferentes puntos (__hooks__) a medida que
 ![Netfilter hooks -simple block diagram](https://thermalcircle.de/lib/exe/fetch.php?w=700&tok=37d6df&media=linux:nf-hooks-simple1.png)
 
 
-## Nftables
+## nftables
 
 
 >[!TIP]
@@ -93,6 +48,15 @@ Para el correcto manejo de nftables, es necesario entender su estructura básica
 * Conjuntos: Permite agrupar múltiples elementos tales como ip's, puertos o direcciones MAC en un único objeto que puede ser referenciado en las reglas. Permite manejar un número complejo de reglas de forma más sencilla y eficiente.
 
 ![Essential Nfttables ruleset ](https://thermalcircle.de/lib/exe/fetch.php?w=700&tok=277ef3&media=linux:nf-hooks-nftables-ex2.png)
+
+### Contrack: Seguimiento de paquetes
+>[!NOTE]
+TCP es un protocolo basado en conexión, por lo que una conexión ESTABLISHED esta bien definida. UDP es un protocolo no orientado a conexión, por lo que ESTABLISHED hace referencia a tráfico que ha tenido una respuesta y viceversa.
+
+![iptables_conntrack_2]({% link /resources/img/iptables_conntrack_2.png %})
+
+
+![iptables_conntrack_3]({% link /resources/img/iptables_conntrack_3.png %})
 
 ### Manejo básico de nftables 
 
@@ -125,9 +89,6 @@ nft add element inet example_table example_set { 192.0.2.0-192.0.2.255 }
 nft list sets
 ```
 
-
-
-
 > [!IMPORTANT]
 > **Actividad** 
 > * Crea una tabla denominada _asir2_table_ para los paquets ipv4 e ipv6 , dentro de ella una cadena denomindada _asir2_chain_ asociada al _hook_ output con política por defecto _reject_
@@ -137,42 +98,196 @@ nft list sets
 >	* Comprueba que efectivamente se han creando los conjuntos de valores.
 >	* Propón y crea un conjunto de valores (no basado en direcciones ip) que creas puede ser de utilidad en la definición de reglas de un cortafuegos. Justifica tu respuesta.
 
-
-
-
-
-
-nft add rule ip nat postrouting oifname "wan" masquerade
-
-
-
-```
-Para navegar en la internet, necesitamos utilizar una ip pública, para ello activaremosa traducción de direcciones privadas a públicas (NAT) en el cortafuegos
-```bash
-firewall# iptables -t nat -A POSTROUTING -o eth3 -j MASQUERADE
-```
-
-Para guardar la regla anterior de forma persistente, utilizamos el comando _netfilter-persistent_
-```bash
-vagrant@fw:$sudo netfilter-persistent save
-```
-Probamos conectividad desde las diferentes máquinas
+#### Logging and rate limit
+Podemos registar la actuación de las reglas del cortafuegos y limitar el número de paquetes con propósito de auditoria y evitar ciertos ataques.
 
 ```bash
-vagrant@lan:$ ping 10.0.82.1
-vagrant@lan:$ ping 10.0.82.200
-vagrant@lan:$ ping 10.0.200.100
-vagrant@lan:$ ping 192.168.82.100
-vagrant@lan:$ ping yahoo.es
+sudo nft add rule inet my_filter_table input tcp dport 22 log prefix "SSH Drop:" level warning
+sudo nft add rule inet my_filter_table input tcp dport 22 drop
+sudo nft add rule inet my_filter_table input icmp type echo-request limit rate 10/second accept
+sudo nft add rule inet my_filter_table input icmp type echo-request drop
+```
+
+### Reglas. La Lógica
+
+#### Match Expresion
+
+| # Protocol matching  |
+| --------------| -----------------------|
+| tcp dport 22 	| # TCP destination port |
+| udp sport 53	| # UDP source port 	|
+| icmp type echo-request | # ICMP type |
+| ip protocol tcp | # IP protocol |
+
+| # Address matching |
+| --------------| -----------------------|
+| ip saddr 192.168.1.0/24 | # Source IP range |
+| ip daddr != 10.0.0.0/8 | # Destination IP (not) |
+| ip saddr { 1.2.3.4, 5.6.7.8 } | # Multiple IPs# Interface matching |
+| iif eth0 | # Input interface |
+| oif "wlan*" | # Output interface (wildcard) |
+| iifname "docker0" | # Interface by name |
+
+| # Connection tracking |
+| --------------| -----------------------|
+| ct state established | # Connection state |
+| ct state new,related | # Multiple states |
+| ct direction original | # Connection direction |
+
+| # Time-based matching |
+| --------------| -----------------------|
+| meta hour "09:00"-"17:00" | # Time range |
+| meta day { "Monday", "Friday" } | # Specific days# Packet properties |
+| meta length 40-100 |# Packet size range |
+| meta mark 0x123 | # Packet mark |
+| meta priority 0 | # Priority
+
+#### Sentencias (Acciones)
+
+| # Basic actions |
+| --------|----------|
+| accept | # Allow packet |
+| drop | # Silent drop |
+| reject | # Send rejection |
+| return |  # Return to calling chain |
+
+
+| # Logging |
+| --------|----------|
+| log | # Basic logging |
+| log prefix "SSH: " | # With prefix |
+| log level emerg |# Log level# Counters and statistics|
+| counter |# Count packets/bytes |
+| counter packets 100 bytes 8000 | # Set initial values |
+
+| # Target modification |
+| --------|----------|
+| snat to 1.2.3.4 | # Source NAT |
+| dnat to 192.168.1.10 | # Destination NAT |
+| masquerade |# Dynamic SNAT |
+
+| # Packet modification |
+| --------|----------|
+| meta mark set 0x123 | # Set packet mark |
+| meta priority set 0 | # Set priority |
+
+| # Rate limiting |
+| --------|----------|
+| limit rate 10/minute | # Basic rate limiting |
+| limit rate over 100/minute drop | # Burst protection |
+
+| # Advanced actions |
+| --------|----------|
+| queue | # Send to userspace |
+| dup to device eth1 | # Duplicate packet |
+
+> [!IMPORTANT]
+> **Actividad** 
+> * Crea una regla que acepte las conexiones _ssh_ del interfaz _eth0_
+> * Crea una regla que permita el tráfico entre el interfaz enp2s0 y enp1s0
+> * Crea un conjunto denominado _inernal_nets_ con varias redes ipv4
+> * Crea una regla que acepte las conexiones ip provenientes del conjunto _internal_nets_ creado en el paso anterior.
+> * Crea una regla que aplique _masquerade_ a los paquetes salitenes por el interfaz "eth0"
+> * Crea una regla que aplique _masquerade_ a los paquetes salitenes por el interfaz "eth0" y provenientes del conjunto _internal_nets_
+> * El servidor _ldap_ se encuentra en la ip 10.10.10.11. Haz _port-forwarding_ si el paquete proviene de la interfaz "wan" y va dirigido al puerto usado por el servicio _ldap_
+> * Crea una regla que cambie la dirección de destino a 10.1.0.10 si el paquete va dirigido a los puertos 80 o 443
+> * Crea una regla que accepte las conexiones cuyo esado sea _new_, _established_ o _related_.
+> * Crea una regla para que el servidor web únicamente acepte 100 paquetes por minuto y ráfagas cortas de 200.
+> * Crea una regla que deniege las conexiones cuyo estado sea _invalid_.
+> * Crea una regla para que el servidor _ssh_ acepte únicamente 50 paquetes por minuto.
+> * Crea una regla para que los paquetes _ssh_ descartados se registren con el prefijo _"SSH rate limit exceeded: "_.
+> * Crea un conjunto denominado _port_scanners_ e incluye varias ip de ejemplo
+> * Referencia el conjunto anterior en una regla que deniege el acceso si proviene de alguna de las ips del conjunto.
+> * Crea una cadena denominada _input_wan_ que permita el tráfico _icmp_ de tipo _echo-request_ y el _udp_ dirigido al puerto 68 (DHCP). Deniega el resto
+> * Crea en una tabla denominada _asir2_table_ una cadena_base denominada _asir2_input_ asocianda al punto (hook) input. Para todo el tráfico proveniente del interfaz "eth0" salta a la cadena creada en el paso anterior.
+
+
+#### Añadir, insertar y eliminar reglas
+```bash
+nft add rule <family> <table> <chain> <match expresion> <action>
+nft add rule inet filter input  iifname "eth0" tcp dport {443, 80} accept
+# inserta reglas en una posición específica
+nft -a list table inet filter
+nft add rule inet filter input position 123 iifname "eth0" tcp dport {443, 80} accept #before position
+nft insert rule inet filter input position 123 iifname "eth0" tcp dport {443, 80} accept #after position
+nft delete rule inet filter input handle 178
 ```
 
 > [!IMPORTANT]
-> Es importante verificar que lo hecho hasta ahora funciona correctamente apagadas las máquinas.
-> Reinícilas _vagrant reload_ y prueba conctividad de nuevo.
+> **Actividad** 
+> A partir del siguiente [fichero](https://raw.githubusercontent.com/ASIR2-SGD/asir2-sgd.github.io/refs/heads/main/resources/files/nft-incus.txt) de reglas usadas por el servidor _incus_
+> Analiza las reglas indicando y enumerando el número de cadenas y tablas
+> Explica a modo general y usando un lenguaje natural las reglas de la cadena _in.incusbr0_
+> Explica en el contexto el propósito de la única regla en la cadena pstrt.incusbr0
 
-> [!NOTE]
-> El alumno deberá implementar el resto de reglas según se detalla en el siguiente apartado.
- 
+
+
+
+## Actividad 1. Configuración de un cortafuegos con nftables
+Para llevar a cabo la práctica necesitamos tres contenedores (_firewall_ , _lan1_ y _lan2_) y un switch virtual (_ovs-br0_)
+
+> [!IMPORTANT]
+> **Actividad** 
+> Dibuja un diagrama de red del escenario propuesto, indicando los interfaces e ip's
+
+
+Crea el cortafuegos y añadele un segundo interfaz de red denominado _lan_, renombra el interfaz _eth0_, creado por defecto a _wan_ para mayor claridad.
+
+```bash
+$ incus launch images:ubuntu/noble firewall
+$ incus config device override firewall eth0 name=wan
+$ incus config device set firewall eth1 name=lan
+$ incus config device add firewall lan nic nictype=bridged parent=ovs-br0
+# Aprovisionamiento básico del firewall
+$ incus exec firewall -- bash -c 'apt-get update && apt-get -y install  aptitude wget bash-completion nano xsel vim dnsmasq nftables' 
+$ incus exec firewall -- bash -c 'systemctl enable nftables.service'
+# Creación de los clientes
+$ incus launch images:ubuntu/noble lan1 --network ovs-br0
+```
+
+> [!IMPORTANT]
+> **Actividad** 
+> * El interfaz _eth1_ que conecta con la LAN tiene que tener una ip estática, lleva a cabo la configuración de red apropiada para dicha interfaz y aplicando los cambios mediante la utilidad _netplan_. 
+> La ip para el interfaz _eth1_ debe ser 10.10.82.1. 
+> Los cambios en la configuración de red se llevarán a cabo editando el fichero _/etc/netplan/10-lxc.yaml_
+> * El _firewall_ deberá implementar funcionalidad DHCP para proveer a sus clientes LAN de ip dinámica. Lleva a cabo la configuración del servidor DHCP usando _dnsmasq_.
+> Lleva a cabo la configuración y comprueba que los clientes LAN obtienen una ip de la red 10.10.82/0
+
+> [!WARNING]
+> El servidor DNS de _dnsmasq_ colisiona a hacer uso que el mismo puerto 53 que el servicio _systemd-resolve_, para evitar este problema y que ambos servidores DNS funcionen correctamente, deberás descomentar en el fichero _/etc/dnsmasq.conf_ la linea _bind-interfaces_ y asignar la interfaz _lan_ como la interfaz de escucha de peticiones DNS y DHCP 
+
+
+Para que el _firewall_ actue como enrutador y redirecciones los paquetes a la interfaz de salida apropiada, debemos activar _forwarding_
+De forma temporal mediante el comando
+```bash
+firewall# sysctl -w net.ipv4.ip_forward=1
+```
+Hacemos el cambio persistente editando el fichero _/etc/sysctl.conf_ y descomenta la linea 28
+
+```bash
+firewall# vi /etc/sysctl.conf
+28 net.ipv4.ip_forward=1
+```
+Reiniciar el servicio _systemd-sysctl_
+```bash
+firewall# systemctl restart systemd-sysctl.service 
+```
+
+
+
+> [!IMPORTANT]
+> **Actividad** 
+> En este momento, y aunque hemos configurado el _firewall_ como enroutador, no es posible salir a _internet_ con los clientes lan. Analiza y entiendo el problema llevando a cabo las modificaciones necesaris en las reglas del _firewall_ para permitir la salida de los clientes al exterior.
+> * Comprueba que los clientes _lan_ obtienen ip del _firewall_ en la red apropiada.
+> * Comprueba que en un principo no pueden salir al exterior
+> * Añade las reglas apropiadas el _firewall_ para permitir a los clienes salir al exterior
+
+
+
+
+## Actividad 2. OpenWRT
+
+
 
 ### Firewall - Reglas
 ![network_diagram]({% link /resources/img/network_diagram.png %})
@@ -185,14 +300,10 @@ vagrant@lan:$ ping yahoo.es
 - [ ] Se permite el tráfico http/s del exterior dirigido a la _dmz_
 - [ ] Las peticiones provenientes del exterior al puerto 80/443 (http/s) serán redirigidas al servidor web de la _dmz_
 
->[!CAUTION]
->La conexión _ssh_ al _fw_ se realiza desde una ip de la red 10.0.2.0/24. Utiliza el comando _netstat -atunp_ para conocer la ip exacta y permitir estas conexiónes únicamente desde esa ip.
 
 >[!Tip]
 >Se metódico y cuidadoso a la hora de establecer las reglas. Crea un fichero (script) bien documentado con a medida que vas añadiendolas. Comprueba el efecto de cada una y ejecuta los _tests_ de regresión para verificar que las reglas añadidas no rompen el estado anterior.
 
->[!Tip]
->Si en algún momento deseas que tu máquina tenga acceso a internet, puedes hacerlo de forma temporal agregando la linea ```route add default gw 10.0.2.2``` . Recuerda eliminarla finalizado el uso de internet para no alterar el funcionamiento de la práctica. Usa el comando ```route del default gw 10.0.2.2```
 
 
 ### Redireccionamiento de puertos y apache2 ldap authentication.
@@ -211,181 +322,11 @@ Para llevara a cabo la autenticación deberemos utilizar el módulo de apache [_
 
 ![iptables-chains](https://miro.medium.com/v2/resize:fit:720/format:webp/1*Vs4XnYTCI4fXYuGl2V3xfw.png)
 
-**Contrack**: Seguimiento de paquetes
->[!NOTE]
-TCP es un protocolo basado en conexión, por lo que una conexión ESTABLISHED esta bien definida. UDP es un protocolo no orientado a conexión, por lo que ESTABLISHED hace referencia a tráfico que ha tenido una respuesta y viceversa.
-
-![iptables_conntrack_2]({% link /resources/img/iptables_conntrack_2.png %})
 
 
-![iptables_conntrack_3]({% link /resources/img/iptables_conntrack_3.png %})
 ## Links
 * [iptables-essentials](https://www.digitalocean.com/community/tutorials/iptables-essentials-common-firewall-rules-and-commands)
 * [How To Implement a Basic Firewall Template with Iptables on Ubuntu 20.04](https://www.digitalocean.com/community/tutorials/how-to-implement-a-basic-firewall-template-with-iptables-on-ubuntu-20-04)
 * [iptables, un manual sencillo](https://fp.josedomingo.org/seguridadgs/u03/iptables.html)
 * [Instalación de dnsmasq en Ubuntu 22.04](https://www.ochobitshacenunbyte.com/2024/11/25/dnsmasq-configuracion-de-dns-y-dhcp-en-linux/)
 * [How to use static IP addresses](https://netplan.readthedocs.io/en/stable/using-static-ip-addresses/)
-
-
-## Anexo II. Comados
-### Netfilter
-1. Borrado de reglas
-	```bash
-	netfilter-persistent flush
-	```
-2. Carga las reglas del fichero _/etc/iptables/rules.v4_
-	```bash
-	netfilter-persistent reload
-	```
-3. Guarda las reglas en el fichero _/etc/iptables/rules.v4_
-	```bash
-	netfilter-persistent save
-	```
-### IP-Tables
-4. Lista la tabla filter(por defecto)
-	```bash
-	iptables -L
-	```
-5. Lista la cadena INPUT de la tabla filter
-	```bash
-	iptables -t filter -L INPUT
-	```
-6. Lista la tabla nat
-	```bash
-	iptables -t nat -L
-	```
-7. Aplica la política por defetco DROP a la cadena INPUT de la tabla _filter_
-	```bash
-	iptables -t filter -P INPUT DROP
-	```
-8. Borra(flush) las reglas de la cadena FORWARD de la tabla filter(por defecto)
-	```bash
-	iptables -F FORWARD
-	```
-9. NAT Maquerade
-	```bash
-	iptables -t nat -A POSTROUTING -o eth1 -j MASQUERADE
-	```
-
-10. Aceptamos tráfico originado en el loobpack local, tráfico del servidor, destinado al servidor
-	```bash
-	iptables -A INPUT -i lo -j ACCEPT
-	```
-11. Aceptamos tráfico (respuesta) parte de una conexion ya establecida iniciada en el servidor
->[!NOTE]
-> Esta regla utiliza el módulo _conntrack_ que permite a _iptables_ obtener el contexto necesario para evaluar paquetes que forman parte de una conexión 
-
->[!NOTE]
-> TCP es un protocolo basado en conexión, por lo que una conexión ESTABLISHED esta bien definida. UDP es un protocolo no orientado a conexión, por lo que ESTABLISHED hace referencia a tráfico que ha tenido una respuesta y viceversa.
-
-	```bash
-	iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
-	```
-
-13. Denegamos tráfico _inválido_ a causa de una conexión, un interfaz o un puerto no existente.
-	```bash
-	iptables -A INPUT -m conntrack --ctstate INVALID -j DROP
-	```
-14. Rechazamos el tráfico ICMP devolviendo un mensaje de error
-	```bash
-	iptables -A INPUT -p icmp -j REJECT --reject-with icmp-port-unreachable
-	```
-15. Rechazamos el tráfico proveniente de una red o ip
-	```bash
-	iptables -A INPUT -s 203.0.113.51 -j DROP
-	iptables -A INPUT -s 203.0.113.0/24 -j DROP
-	```
-16. Rechazamos el tráfico proveniente de una red y un interfaz de red
-	```bash
-	iptables -A INPUT -i eth0 -s 203.0.113.51 -j DROP
-	```
-17. Permitimos el tráfico SSH de entrada de una red específica o Ip
-	```bash
-	iptables -A INPUT -p tcp -s 203.0.113.0/24 --dport 22 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
-	
-	
-	```
-18. Permitimos el tráfico HTTP/S atraviese el firewall
-```bash
-	iptables -A FORWARD -p tcp -m multiport --dports 80,443 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
-	iptables -A FORWARD -p tcp -s 203.0.113.0/24 -m multiport --dports 80,443 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT		
-```
-19. Permitimos el tráfico de la red interna a la red externa (asumiendo _eth0_ es la red interna y _eth1_ la externa)
-	```bash
-	sudo iptables -A FORWARD -i eth1 -o eth0 -j ACCEPT
-	```
-20. Cambia la dirección ip de destino (DNAT)
-```bash
-	iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 80 -j DNAT --to-destination 192.168.1.2:80
-```
-
-## Anexo III. Firewall - Reglas - soluciones
-
-- [x] Permitir el tráfico desde el interfaz loopback
-```bash
-vagrant@fw:$sudo iptables -A INPUT -i lo -j ACCEPT
-vagrant@fw:$sudo iptables -A OUTPUT -o lo -j ACCEPT
-```
-- [x] No se permite el trafico entrante (dirigido a) ni saliente (generado por) del cortafuegos, exceptuando el tráfico _ssh_ proveniente desde nuestr ordenador anfitrión y el ordenador del profesor 192.168.82.101
-
-```bash
-vagrant@fw:$sudo iptables -A INPUT -p tcp -s 10.0.2.2 --dport 22 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
-vagrant@fw:$sudo iptables -A OUTPUT -p tcp -d 10.0.2.2 --sport 22 -m conntrack --ctstate ESTABLISHED -j ACCEPT
-
-vagrant@fw:$sudo iptables -A INPUT -p tcp -s 192.168.82.101 --dport 22 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
-vagrant@fw:$sudo iptables -A OUTPUT -p tcp -d 192.168.82.101 --sport 22 -m conntrack --ctstate ESTABLISHED -j ACCEPT
-```
-- [x] Aplicamos una política restrictiva
-```bash
-vagrant@fw:$sudo iptables -t filter -P INPUT DROP
-vagrant@fw:$sudo iptables -t filter -P OUTPUT DROP
-```
-
-- [x] Permitir tráfico desde la interfaz loopback
-```bash
-vagrant@fw:$sudo iptables -A INPUT -i lo -j ACCEPT
-vagrant@fw:$sudo iptables -A OUTPUT -o lo -j ACCEPT
-```
-
-- [x] Aplicar una política restrictiva a la cadena FORWARD y abrir los puertos necesarios
-```bash
-iptables -t filter -P FORWARD DROP
-```
-
-- [x] No se permite el tráfico del servidor ldap a la red dmz exceptuando el establecido (iniciado en dmz)
-```bash
-iptables -A FORWARD -i eth1 -o eth2  -s 10.0.82.200 -d 10.0.200.0/24 -m conntrack --ctstate NEW -j DROP
-```
-
-- [x] No se permite el tráfico de la red _dmz_ a la red _lan_ exceptuando el tráfico _ldap_ dirigido a al servidor _ldap_.
-
-```bash
-iptables -A FORWARD -i eth2 -o eth1 -p udp -d 10.0.82.200 --dport 389 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
-iptables -A FORWARD -i eth1 -o eth2 -p udp -s 10.0.82.200 --sport 389 -m conntrack --ctstate ESTABLISHED -j ACCEPT
-iptables -A FORWARD -i eth2 -o eth1 -p tcp -d 10.0.82.200 --dport 389 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
-iptables -A FORWARD -i eth1 -o eth2 -p tcp -s 10.0.82.200 --sport 389 -m conntrack --ctstate ESTABLISHED -j ACCEP
-```
-- [x] No se permite el tráfico saliente (generado por) de la red _dmz_ exceptuando el mencionado en el apartado anterior
-
-
-- [x] Se permite el tráfico de la red lan a la red dmz
-```bash
-vagrant@fw:$sudo iptables -A FORWARD -i eth1 -o eth2  -s 10.0.82.0/24 -d 10.0.200.0/24 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
-vagrant@fw:$sudo iptables -A FORWARD -i eth2 -o eth1  -s 10.0.200.0/24 -d 10.0.82.0/24 -m conntrack --ctstate ESTABLISHED -j ACCEPT
-```
-
-- [x] Se permite el tráfico al exterior (wan) generando en la red _lan_, exceptuando el tráfico proveniente del servidor _ldap_
-```bash
-vagrant@fw:$sudo iptables -A FORWARD -i eth3 -o eth1  ! -d 10.0.82.200 -m conntrack --ctstate ESTABLISHED -j ACCEPT
-vagrant@fw:$sudo iptables -A FORWARD -i eth1 -o eth3  ! -s 10.0.82.200 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
-```
-- [x] Se permite el tráfico http/s del exterior dirigido a la _dmz_
-```bash
-vagrant@fw:$sudo iptables -A FORWARD -i eth3 -o eth2 -p tcp -m multiport --dports 80,443 -d 10.0.200.100 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
-vagrant@fw:$sudo iptables -A FORWARD -i eth2 -o eth3 -p tcp -m multiport --sports 80,443 -s 10.0.200.100 -m conntrack --ctstate ESTABLISHED -j ACCEPT
-```
-- [x] Las peticiones provenientes del exterior al puerto 80/443 (http/s) serán redirigidas al servidor web de la _dmz_
-```bash
-vagrant@fw:$sudo iptables -t nat -A PREROUTING -i eth3 -p tcp --dport 80 -j DNAT --to-destination 10.0.200.100:80
-vagrant@fw:$sudo iptables -t nat -A PREROUTING -i eth3 -p tcp --dport 443 -j DNAT --to-destination 10.0.200.100:443
-```

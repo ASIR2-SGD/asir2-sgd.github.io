@@ -1,0 +1,30 @@
+table inet incus {
+	chain pstrt.incusbr0 {
+		type nat hook postrouting priority srcnat; policy accept;
+		ip saddr 10.149.165.0/24 ip daddr != 10.149.165.0/24 masquerade
+	}
+
+	chain fwd.incusbr0 {
+		type filter hook forward priority filter; policy accept;
+		ip version 4 oifname "incusbr0" accept
+		ip version 4 iifname "incusbr0" accept
+	}
+
+	chain in.incusbr0 {
+		type filter hook input priority filter; policy accept;
+		iifname "incusbr0" tcp dport 53 accept
+		iifname "incusbr0" udp dport 53 accept
+		iifname "incusbr0" icmp type { destination-unreachable, time-exceeded, parameter-problem } accept
+		iifname "incusbr0" udp dport 67 accept
+		iifname "incusbr0" ip protocol udp udp checksum set 0
+	}
+
+	chain out.incusbr0 {
+		type filter hook output priority filter; policy accept;
+		oifname "incusbr0" tcp sport 53 accept
+		oifname "incusbr0" udp sport 53 accept
+		oifname "incusbr0" icmp type { destination-unreachable, time-exceeded, parameter-problem } accept
+		oifname "incusbr0" udp sport 67 accept
+		oifname "incusbr0" ip protocol udp udp checksum set 0
+	}
+}
