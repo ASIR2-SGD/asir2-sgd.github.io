@@ -85,7 +85,7 @@ openssl req  -pubout -in request.csr -out pub_key.pub
 openssl x509 -pubout -in certificate.crt -out pub_key.pub
 ```
 
-**Comprobar inconsistencias entre claves y certificados **
+**Comprobar inconsistencias entre claves y certificados**
 ```bash
 openssl pkey -pubout -in private.key | openssl sha256
 openssl req -pubkey -in request.csr -noout | openssl sha256
@@ -118,7 +118,7 @@ Utilizaremos la utilidad [open-pdf-sign](https://github.com/open-pdf-sign/open-p
 ```bash
 $ mkdir -p ~/bin && cd ~/bin
 $ wget https://github.com/open-pdf-sign/open-pdf-sign/releases/download/v0.3.0/open-pdf-sign.jar
-$ echo 'PATH=$PATH:~/bin'
+$ echo 'PATH=$PATH:~/bin' >> ~/.bashrc
 $java -jar open-pdf-sign.jar --add-page --page -1 --timestamp --input document.pdf --output document_signed.pdf --certificate certificate.crt --key private.key 
 ```
 
@@ -141,8 +141,8 @@ Documentos/SAD/certs <-certificados firmados por CA de clase
 > Utiliza el comando `sshfs` para _montar_ una carpeta compartida con el servidor via ssh
 ---
 ```bash
-sshfs -o allow_other,default_permissions ubuntu@ip:/home/ubuntu/pki/requests ~/certs/csr
-sshfs -o allow_other,default_permissions ubuntu@ip:/home/ubuntu/pki/issued ~/certs/signed
+sshfs -o allow_other,default_permissions ubuntu@ip:/home/ubuntu/pki/certs/requests ~/Documentos/SAD/certs/csr
+sshfs -o allow_other,default_permissions ubuntu@ip:/home/ubuntu/pki/certs/issued ~/Documentos/SAD/certs/signed
 ```
 
 
@@ -166,12 +166,16 @@ wget https://raw.githubusercontent.com/ASIR2-SGD/asir2-sgd.github.io/refs/heads/
 ## Componentes
 **Public Key Infrastructure (PKI)**
 Arquitectura de seguridad donde la credibilidad se obtiene mediante la firma de una CA fiable.
+
 **Certificate Authority (CA)**
 Entidad que emite certificados y CRL
+
 **Certificate**
 Clave pública e ID vinculados por la firma de una CA
+
 **Certificate Signing Request (CSR)**
 Petición de solicitud de certificado. Contiene la clave pública y el ID a certificar.
+
 **Certificate Revocation List (CRL)**
 Lista de los certificados revocados (inválidos). Publicada por la CA a intervalos regulares.
 
@@ -180,17 +184,22 @@ Lista de los certificados revocados (inválidos). Publicada por la CA a interval
 
 **CA Root**
 Una CA que no es certificada por ninguna otra, se basa únicamente en su propia reputación.
+
 **Intermediate CA/subordinate CA**
 Una CA Certificado por otra se denomina CA subordinada o CA Intermedia
+
 **Singing CA/Issuing CA**
 CA en la parte inferior de la jerarquia PKI. Emite los certificados para usuarios,servidores,etc.
+
 ## Formato de ficheros
 **Privacy Enhanced Mail (PEM)**
 En formato de texto. Codificado Base-64 con lineas de cabecera y pie. Formato preferido en OpenSSL y
 la gran mayoría de software (e.g. Apache mod_ssl, stunnel).
 Es un contenedor para almacenar claves y certificados (cadena de certificados)
+
 **Distinguished Encoding Rules (DER)**
 En binario. Formato preferido en entornos Windows. Tambíen el formato oficial par al descarga de certificados y CRLs.
+
 **Signed Certificate (CRT)**
 .crt or .cert son los ficheros firmados por una CA. Solo contiene un solo certificado
 
