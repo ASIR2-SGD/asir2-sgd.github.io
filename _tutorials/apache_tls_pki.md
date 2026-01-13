@@ -12,15 +12,10 @@ TLS (Transport Layer Security) es un protocolo de seguridad basado en criptograf
 En esta práctica configuraremos nuestro servidor web (Apache) para establecer conexiones seguras mediante el protocolo HTTPS.
 El certificado digital que usaremos deberá estar firmado por una Autoridad Certificadora que crearemos y configuraremos.
 
-## Links
-* [Autoridades certificadorase](https://devopscube.com/create-self-signed-certificates-openssl/)
-  
-* [Crear una autoridad certificadora - Ubuntu 22.04](https://www.digitalocean.com/community/tutorials/how-to-set-up-and-configure-a-certificate-authority-on-ubuntu-22-04)
-* [Configurar TLS en Apache](https://www.digitalocean.com/community/tutorials/how-to-create-a-self-signed-ssl-certificate-for-apache-in-ubuntu-20-04)
-* [Configurar NFS](https://www.digitalocean.com/community/tutorials/how-to-set-up-an-nfs-mount-on-ubuntu-22-04)
 
 
 ## Objetivos
+* Entender el protocolo TLS y HTTPS
 * Entender el papel de una CA y el proceso de creación de certificados digitales
 * Crear y configurar una CA mediante la utilidad *easy-rsa*
 * Crear par de claves para crear una petición de certificado
@@ -29,7 +24,25 @@ El certificado digital que usaremos deberá estar firmado por una Autoridad Cert
 * Configurar el protocolo https del servidor web apache para transmisiones seguras.
 * Verificar y documentar de forma clara, concisa y completa los pasos llevados a cabo para la finalización de la práctica.
 
-## Desarrollo
+## TLS (Transport Layer Security)
+_TLS_ es un protocolo de seguridad ampliamente usado diseñado para facilitar privacidad y seguridad en las comunicaciones a través de internet. El uso principal de TLS es encriptar comunicaciones entre el cliente y el servidor.
+_HTTPS_ es una implementación de _TLS_ que es usado por los servidores web y otras servicios web. Cualquier sitio que utilice _HTTPS_ esta por lo tanto haciendo uso de _TLS_
+
+### Protocolos (Handshake)
+![TLS Protocol](https://supertokens.com/static/9cff8404dcf549f68f947fc906ae76a9/29007/tls1.3.png)
+
+Durante el _handshake_ TLS el cliente y el servidor:
+* Especifican que versión de TLS (1.0, 1.2, 1.3, etc.) van usar y que suite de cifrado usar.
+> Hi, I’m your friend, and I want to start a secure conversation. Here are the languages I can speak (types of encryption I can use), and here are some secrets (keys) I’m willing to use to help us understand each other.” 
+
+* El servidor se autentica como el auténtico mediante el envio de un certificado
+> To prove they are the rightful owner of the web site(and not an imposter), your friend shows you a badge (certificate) that a trusted authority has signed.
+
+* Generate session keys for encrypting messages between them after the handshake is complete 
+> After checking the badge, you both agree on a special, private language (a shared secret) for your conversation. This final agreement on a shared secret solidifies your communication channel’s security.
+
+
+## Actividad
 
 Para simular un entorno más real, configuraremos nuestro contenedor de Apache con una _ip_ del aula, para crearemos un _bridge_ entre el interfaz virtual _eth0_ y nuestro interfaz real. Esto en incus es muy sencillo con el comando
 ```bash
@@ -117,5 +130,15 @@ Habilita las conexione SSL en tu servidor apache usando el certificado firmado
     * Chrome [tutorial](https://stackoverflow.com/questions/19692787/how-to-install-certificate-in-browser-settings-using-command-prompt)
 
 
-*TODO*
-Memoria firmada
+
+### Entrega
+* Enviar en un documento **firmado** en formato _markdown_ denominado *username_apache_tls.md* Con las respuestas a las preguntas planteadas en la actividad. Indica cuando sea necesario el comando utilizado. Utiliza el formato _markdown_ adecuado para tener un documento estructurado y legible.
+* Comprueba el correcto funcionamiento de la actividad mediante la ejecución exitosa de los tests
+
+
+## Links
+* [Autoridades certificadorase](https://devopscube.com/create-self-signed-certificates-openssl/)
+  
+* [Crear una autoridad certificadora - Ubuntu 22.04](https://www.digitalocean.com/community/tutorials/how-to-set-up-and-configure-a-certificate-authority-on-ubuntu-22-04)
+* [Configurar TLS en Apache](https://www.digitalocean.com/community/tutorials/how-to-create-a-self-signed-ssl-certificate-for-apache-in-ubuntu-20-04)
+* [Configurar NFS](https://www.digitalocean.com/community/tutorials/how-to-set-up-an-nfs-mount-on-ubuntu-22-04)
