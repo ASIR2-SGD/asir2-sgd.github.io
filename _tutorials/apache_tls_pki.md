@@ -91,8 +91,8 @@ Para ello debes crear una petición
 username=<student-gva-username>
 openssl req -new \
    	-config certs/etc/my-server.conf \
-   	-out certs/csr/apache.$username.local.csr \
-   	-keyout certs/private/apache.$username.local.key
+   	-out certs/csr/apache.$username.asir2.grao.csr \
+   	-keyout certs/private/apache.$username.asir2.grao.key
 ```
 
 **Responde:**
@@ -121,9 +121,9 @@ Explora el comando `openssl x509 -in <certificado> -noout -ext subjectKeyIdentif
 Habilita las conexione SSL en tu servidor apache usando el certificado firmado
 
 * Crea la carpeta _/etc/apache2/ssl_ y _/etc/apache2/ssl/private_ para el certificado y su correspondiente clave privada
-* Tomando como ejemplo el fichero _/etc/apache2/sites-available/default-ssl.conf_ crea el tuyo propio denominado _apache.$username.local.conf_ con la configuración necesaria para habilidar las conexiones SSL mediante el protocolo TLS. Para ello deberás referenciar tanto tu certificado como la clave privada.
+* Tomando como ejemplo el fichero _/etc/apache2/sites-available/default-ssl.conf_ crea el tuyo propio denominado _apache.$username.asir2.grao.conf_ con la configuración necesaria para habilidar las conexiones SSL mediante el protocolo TLS. Para ello deberás referenciar tanto tu certificado como la clave privada.
 
-* Crea una página web de prueba y comprueba desde el navegador, que efectivamente las conexiones son seguras 
+* Crea una página web de prueba y comprueba desde el navegador, que efectivamente las conexiones son seguras  
 
 * Añade el certificado raiz al navegador
     * Firefox [tutorial](https://stackoverflow.com/questions/1435000/programmatically-install-certificate-into-mozilla)
