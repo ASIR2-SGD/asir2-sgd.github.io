@@ -9,8 +9,7 @@ Autoridades certificadoras son las responsables de emitir certificados digitales
 El uso de estos certificados permiten conexiones confiables, además de autenticidad y no repudio.
 TLS (Transport Layer Security) es un protocolo de seguridad basado en criptografía asimétrica que establece un canal seguro entre dos hosts
     
-En esta práctica configuraremos nuestro servidor web (Apache) para establecer conexiones seguras mediante el protocolo HTTPS.
-El certificado digital que usaremos deberá estar firmado por una Autoridad Certificadora que crearemos y configuraremos.
+
 
 
 
@@ -44,6 +43,17 @@ Durante el _handshake_ TLS el cliente y el servidor:
 
 ## Actividad
 
+### Guión esquemático
+
+> 1. Crear petición de certificado y enviar a la CA.
+> 2. Instalar el certificado raíz en nuestro sistema operativo.
+> 3. Crear, modificar y activar tu web site basándote en el fichero existente _/etc/apache/sites-available/default-ssl.conf_
+> 4. Configurar, probar y verificar mediante un navegador web
+
+En esta práctica configuraremos nuestro servidor web (Apache) para establecer conexiones seguras mediante el protocolo HTTPS.
+El certificado digital que usaremos deberá estar firmado por una Autoridad Certificadora que crearemos y configuraremos.
+
+### Container creation and setup
 Para simular un entorno más real, configuraremos nuestro contenedor de Apache con una _ip_ del aula, para crearemos un _bridge_ entre el interfaz virtual _eth0_ y nuestro interfaz real. Esto en incus es muy sencillo con el comando
 ```bash
 $ incus network list
@@ -64,7 +74,7 @@ Crea la siguente estructura de directorios para tener nuestros certificados orga
     └── signed
 
 ```
-La _CA_ denominada _pki_ comparte dos carpetas para que podamos enviarle nuestras peticiones de firma _requests_ y obtener los cetificados firmados _issued_. Ámbas carpetas se encuentran en la carpeta _/home/ubuntu/pki/certs_
+La _CA_ denominada _pki_ comparte dos carpetas para que podamos enviarle nuestras peticiones de firma _requests_a y obtener los cetificados firmados _issued_. Ámbas carpetas se encuentran en la carpeta _/home/ubuntu/pki/certs_
 Accede a ellas de forma fácil mediante _sshfs_
 ```bash
 $ sshfs -o allow_other,default_permissions ubuntu@ip:/home/ubuntu/pki/requests /home/ubuntu/certs/csr/
@@ -74,10 +84,7 @@ $ sshfs -o allow_other,default_permissions ubuntu@ip:/home/ubuntu/pki/issued /ho
 >[!TIP]
 >Mejora la práctica y tu puntuación en ella haciendo los puntos de monaje persistentes, es decir que se creen cuando arranca el sistema.
 
-
-### Conexiones seguras.
-
-#### Creación de certificados
+### Creación de certificados
 Para habilitar las conexiones seguras _TLS_ en tu servidor web, deberás obtener un certificado firmado por la CA de clase.
 Para ello debes crear una petición
 
@@ -86,42 +93,69 @@ Para ello debes crear una petición
 > [!TIP]
 > Añade el la seccion _alt_names_ un DNS a tu elección y la IP de tu server
 
+
 * Utiliza el siguiente comando para crear la petición
 ```bash
 username=<student-gva-username>
 openssl req -new \
-   	-config certs/etc/my-server.conf \
+   	-config certs/etc/apache.$username.request.asir2.grao.conf \
    	-out certs/csr/apache.$username.asir2.grao.csr \
    	-keyout certs/private/apache.$username.asir2.grao.key
 ```
 
 **Responde:**
-* _¿Para que sirve la opción req?._
-* _¿Para que sirve la opción keyout?._
-* _¿Cuál es la finalidad del comando anterior?_
+
+1. _Explica la función de cada uno de los ficheros enumerados y utilizados en las prácticas_
+    * apache.$username.asir2.grao.key
+    * apache.$username.asir2.request.grao.conf
+    * apache.$username.asir2.grao.csr
+    * apache.$username.asir2.grao.crt
+    * apache.$username.asir2.grao.conf
+    * root-ca.crt
+2. _¿Para que sirve la opción req?._
+3. _¿Para que sirve la opción keyout?._
+4. _¿Cuál es la finalidad del comando anterior?_
+
+### Instalación del certificado raiz
+
+Para llevar a cabo la el reconocimiento en nuestro S.O del certificado raiz _ca-root.crt_, deberemos copiar este en la carpeta _/usr/local/share_ca-certificates/_ y ejecutar el comando _update-ca-certificates_ 
 
 
 Una vez creada la petición, notifica a la CA para que lleve a cabo la firma del certificado.
 Utiliza el comando `openssl x509 -in <certificado> -noout -text` para inspeccionar el certificado y responde:
 
-* _¿Cuál es emisor del certificado?_
-* _¿Cuál es el identificador (SubjectKeyIdentifier) del certificado?_
-* _¿Cuál es el identificador del emisor del certificado?_
+5. _Explica qué es un certificado raiz y porqué es neceario instalarlo en nuestro S.O_
+5. _¿Qué hace el comando _update-ca-certificates_?. ¿en que carpeta están los certificados del sistema?. Indica el comando para comprobar que el certificado raiz de clase esta instalado y reconocible por el S.O
+5. _¿Cuál es emisor del certificado?_
+6. _¿Cuál es el identificador (SubjectKeyIdentifier) del certificado?_
+7. _¿Cuál es el identificador del emisor del certificado?_
+
 
 Abre el certificado raiz _root-ca.crt_ y comprueba que el identificador del certificado raiz coincide con el identificador del emisor de tu certificado. 
 Explora el comando `openssl x509 -in <certificado> -noout -ext subjectKeyIdentifier` para obtener directamente el identificador.
 
-* _¿Qué comando de openssl obtiene directamente el identificador del emisor?_
-* _¿Qué comandos has utilizado para comparar si _id_issuer == cert_issuer_id_?
+8. _¿Qué comando de openssl obtiene directamente el identificador del emisor?_
+9. _¿Qué comandos has utilizado para comparar si _id_issuer == cert_issuer_id_?
+
+> [!TIP]
+> Muchos ficheros de configuración incluyen comentarios anteponiendo el caracter '#'. En algunas  ocasiones será necesario eliminar esos comentarios y líneas en blanco. Puedes usar el comando sed con las siguientes opciones.
+___
+```bash
+sed -e '/^\s*#.*$/d' -e '/^\s*$/d' file
+```
+10. _Explica la finalidad usando lenguaje natural (nada de tecnicismos) la finalidad de las dos expresiones regulares usadas en el comando anterior_
 
 
 
-#### Configuración Apache2
+
+### Configuración Apache2
 
 Habilita las conexione SSL en tu servidor apache usando el certificado firmado
 
 * Crea la carpeta _/etc/apache2/ssl_ y _/etc/apache2/ssl/private_ para el certificado y su correspondiente clave privada
 * Tomando como ejemplo el fichero _/etc/apache2/sites-available/default-ssl.conf_ crea el tuyo propio denominado _apache.$username.asir2.grao.conf_ con la configuración necesaria para habilidar las conexiones SSL mediante el protocolo TLS. Para ello deberás referenciar tanto tu certificado como la clave privada.
+> [!WARNING]
+> Es probable que sea necesario activar el modulo _ssl_ con el comando _a2enmod <nombre_modulo>_ para activar las conexiones seguras. 
 
 * Crea una página web de prueba y comprueba desde el navegador, que efectivamente las conexiones son seguras  
 
@@ -131,8 +165,16 @@ Habilita las conexione SSL en tu servidor apache usando el certificado firmado
 
 
 
-### Entrega
-* Enviar en un documento **firmado** en formato _markdown_ denominado *username_apache_tls.md* Con las respuestas a las preguntas planteadas en la actividad. Indica cuando sea necesario el comando utilizado. Utiliza el formato _markdown_ adecuado para tener un documento estructurado y legible.
+## Entrega
+* Enviar en un documento **firmado** en formato _markdown_ denominado *username_apache_tls.md* Con las respuestas a las preguntas planteadas en la actividad. Indica cuando sea necesario el comando utilizado. 
+Crea un Anexo denominado _Anexo I. Ficheros de configuración_ y añade el contenido en texto (reducelo si es muy grande) excluyendo comentarios y líneas en blanco (utiliza el tip de la pregunta 10) de los siguientes ficheros.
+    * apache.$username.asir2.grao.key
+    * apache.$username.asir2.request.grao.conf
+    * apache.$username.asir2.grao.csr
+    * apache.$username.asir2.grao.crt
+    * apache.$username.asir2.grao.conf
+
+Utiliza el formato _markdown_ adecuado para tener un documento estructurado y legible.
 * Comprueba el correcto funcionamiento de la actividad mediante la ejecución exitosa de los tests
 
 

@@ -3,7 +3,6 @@
 
 # Práctica SGD
 ## General - máquinas virtuales y contenedores
-* Vagrant
 * [incus]({% link _tutorials/incus.md %})
 
 ## Logs y métricas

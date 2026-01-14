@@ -28,7 +28,7 @@ Signed-By: /etc/apt/keyrings/zabbly.asc
 EOF'
  
 ```
-  ### Init setup
+### Init setup
 ```bash
 $ sudo usermod -a -G incus-admin <user>
 $ newgrp incus-admin
@@ -46,6 +46,11 @@ $incus launch images:ubuntu/noble host1 --storage <pool> --device root,size=40Gi
 
 $ incus launch --vm images:ubuntu/noble/desktop desktop -c limits.memory=3GiB -c limits.cpu=4 --console=vga
 $ incus copy <source instance> <dst instance>
+```
+### Import/export containers
+```bash
+$ incus export <instance_name> backup0.tar.gz
+$ incus import backup0.tar.gz [<instance_name>]
 ```
 
 ### Basic provisioning
