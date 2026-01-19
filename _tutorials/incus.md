@@ -234,17 +234,51 @@ $ incus publish win11 --alias win11-image
 ### Running Graphical Applications in Incus Containers
 * Descargar _X11.profile_
 ```bash
-$ wget -O ~/X11.profile https://raw.githubusercontent.com/ASIR2-SGD/asir2-sgd.github.io/refs/heads/main/resources/files/X11.profile
+$ wget -O ~/X11.profile https://raw.githubusercontent.com/ASIR2-SGD/asir2-sgd.github.io/refs/heads/main/resources/files/X11-mini.profile
 ```
 * Crear un perfil para poder ejecutar aplicaciones gráficas en un contenedor
 
 ```bash
-$ incus profile create X11 < X11.profile
+$ incus profile create X11 < X11-mini.profile
 ```
-* Lanzar la imagen con el nuevo _profile_
+* Lanzar la imagen con el nuevo _profile_ o asignarlo a algun contenedor existente
 ```bash
-$ incus launch images:ubuntu/noble/cloud --profile default --profile X11 gui
+$ incus launch images:ubuntu/noble/ --profile default --profile X11 <instance>
+$ incus profile add profile <instance> X11 
 ```
+* Activar X11 socket y display
+```bash
+incus exec <instance> -- bash -c 'cat >> /etc/profile << EOF
+export DISPLAY=:0
+export PULSE_SERVER=/mnt/pulse.sock
+export export XDG_SESSION_TYPE=x11
+ln -fs /mnt/X0 /tmp/.X11-unix/X0
+EOF
+'
+```
+
+> [!WARNING]
+> El socket X11 creado en el _profile_ estable que tanto el usuario en el contendor como en el host tengan el valor uid y gid igual a 
+> 1000, esto quiere decir que para ejecutar aplicaciones _X11_ debemos loguearnos con el usuario _ubuntu_ (uid:1000) y del mismo modo, en 
+> en nuestro host deberemos loggearnos con el usuario _uid:1000_. Esto último no será posible en mucho casos, por lo que deberemos 
+> modificar la directiva _security.uid_ y _security.gid_ tanto en el socket _x11_ como en el _pulse_.
+
+```bash
+incus profile edit X11
+```
+
+Para comprobar que las aplicaciones gráficas y el audio funciona desde el contenedor, instalaremos las siguientes aplicaciones y utilidades
+```bash
+sudo apt-get install x11-apps mesa-utils pulseaudio pulseaudio-utils alsa-utils
+wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+sudo apt -y install ./google-chrome-stable_current_amd64.deb
+```
+Para comprobar el correcto funcionamiento de los gráficos podemos utilizar las utilidades _xclock_ _glxgears_. Para el audio _speaker-test_
+
+
+
+
+
 
 
 

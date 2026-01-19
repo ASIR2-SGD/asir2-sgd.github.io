@@ -1,6 +1,6 @@
 ---
 layout: default
-title: "firewall"
+title: "firewall_iptables"
 ---
 # Práctica Firewall.
 ## Configuración de un cortafuegos basado en iptables

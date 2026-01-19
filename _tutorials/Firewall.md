@@ -58,7 +58,17 @@ TCP es un protocolo basado en conexión, por lo que una conexión ESTABLISHED es
 
 ![iptables_conntrack_3]({% link /resources/img/iptables_conntrack_3.png %})
 
-### Manejo básico de nftables 
+### Nftables 
+
+#### Instalación
+```bash
+sudo apt-get -y install nftables
+systemctl enable nftables.service
+systemctl start nftables.service
+systemctl status nftables.service
+```
+
+#### Listado reglas y persistencia
 
 ```bash
 nft list ruleset
@@ -72,12 +82,14 @@ nft list tables
 nft list table ip filter
 nft add table <family> <name>
 nft add table ip filter 
+nft delete table ip nat
 
 nft list chains
 nft add chain <family> <table> <chain>
 nft add chain ip filter input
 nft add table ip nat 
 nft add chain ip nat postrouting { type nat hook postrouting priority 100 \; policy accept \; }
+nft delete chain ip nat postrouting
 ```
 
 #### Creando conjuntos (sets)
@@ -90,13 +102,13 @@ nft list sets
 ```
 
 > [!IMPORTANT]
-> **Actividad** 
-> * Crea una tabla denominada _asir2_table_ para los paquets ipv4 e ipv6 , dentro de ella una cadena denomindada _asir2_chain_ asociada al _hook_ output con política por defecto _reject_
->	* ¿Qué significa esto?
->	* Propón algún ejemplo práctico con algún comando básico que permita demostrar el efecto de estas reglas.
-> * Crea un conjunto _set_ de direcciones ipv4 denominado ip_admin, añade varias direcciones en él.
->	* Comprueba que efectivamente se han creando los conjuntos de valores.
->	* Propón y crea un conjunto de valores (no basado en direcciones ip) que creas puede ser de utilidad en la definición de reglas de un cortafuegos. Justifica tu respuesta.
+> **Actividad I. nfttables basics** 
+> 1. Crea una tabla denominada _asir2_table_ para los paquets ipv4 e ipv6 , dentro de ella una cadena denomindada _asir2_chain_ asociada al _hook_ output con política por defecto _reject_
+> 2. ¿Qué significa esto?
+> 3. Propón algún ejemplo práctico con algún comando básico que permita demostrar el efecto de estas reglas.
+> 4. Crea un conjunto _set_ de direcciones ipv4 denominado ip_admin, añade varias direcciones en él.
+> 5. Comprueba que efectivamente se han creando los conjuntos de valores.
+> 6. Propón y crea un conjunto de valores (no basado en direcciones ip) que creas puede ser de utilidad en la definición de reglas de un cortafuegos. Justifica tu respuesta.
 
 #### Logging and rate limit
 Podemos registar la actuación de las reglas del cortafuegos y limitar el número de paquetes con propósito de auditoria y evitar ciertos ataques.
@@ -112,94 +124,97 @@ sudo nft add rule inet my_filter_table input icmp type echo-request drop
 
 #### Match Expresion
 
-| # Protocol matching  |
+| Protocol matching  | |
 | --------------| -----------------------|
-| tcp dport 22 	| # TCP destination port |
-| udp sport 53	| # UDP source port 	|
-| icmp type echo-request | # ICMP type |
-| ip protocol tcp | # IP protocol |
+| tcp dport 22 	| TCP destination port |
+| udp sport 53	| UDP source port 	|
+| icmp type echo-request | ICMP type |
+| ip protocol tcp | IP protocol |
 
-| # Address matching |
+| Address matching | |
 | --------------| -----------------------|
-| ip saddr 192.168.1.0/24 | # Source IP range |
-| ip daddr != 10.0.0.0/8 | # Destination IP (not) |
-| ip saddr { 1.2.3.4, 5.6.7.8 } | # Multiple IPs# Interface matching |
-| iif eth0 | # Input interface |
-| oif "wlan*" | # Output interface (wildcard) |
-| iifname "docker0" | # Interface by name |
+| ip saddr 192.168.1.0/24 | Source IP range |
+| ip daddr != 10.0.0.0/8 | Destination IP (not) |
+| ip saddr { 1.2.3.4, 5.6.7.8 } | Multiple IP Interface matching |
+| iif eth0 | Input interface |
+| oif "wlan*" | Output interface (wildcard) |
+| iifname "docker0" | Interface by name |
 
-| # Connection tracking |
+| Connection tracking | |
 | --------------| -----------------------|
-| ct state established | # Connection state |
-| ct state new,related | # Multiple states |
-| ct direction original | # Connection direction |
+| ct state established |  Connection state |
+| ct state new,related |  Multiple states |
+| ct direction original |  Connection direction |
 
-| # Time-based matching |
+| Time-based matching | |
 | --------------| -----------------------|
-| meta hour "09:00"-"17:00" | # Time range |
-| meta day { "Monday", "Friday" } | # Specific days# Packet properties |
-| meta length 40-100 |# Packet size range |
-| meta mark 0x123 | # Packet mark |
-| meta priority 0 | # Priority
+| meta hour "09:00"-"17:00" |  Time range |
+| meta day { "Monday", "Friday" } |  Specific days 
+
+|Packet properties | |
+| -----------------| ---------------- |
+| meta length 40-100 | Packet size range |
+| meta mark 0x123 |  Packet mark |
+| meta priority 0 |  Priority
 
 #### Sentencias (Acciones)
 
-| # Basic actions |
+|  Basic actions | |
 | --------|----------|
-| accept | # Allow packet |
-| drop | # Silent drop |
-| reject | # Send rejection |
-| return |  # Return to calling chain |
+| accept |  Allow packet |
+| drop |  Silent drop |
+| reject |  Send rejection |
+| return |   Return to calling chain |
 
 
-| # Logging |
+|  Logging | |
 | --------|----------|
-| log | # Basic logging |
-| log prefix "SSH: " | # With prefix |
-| log level emerg |# Log level# Counters and statistics|
-| counter |# Count packets/bytes |
-| counter packets 100 bytes 8000 | # Set initial values |
+| log |  Basic logging |
+| log prefix "SSH: " |  With prefix |
+| log level emerg | Log level Counters and statistics|
+| counter | Count packets/bytes |
+| counter packets 100 bytes 8000 |  Set initial values |
 
-| # Target modification |
+|  Target modification | |
 | --------|----------|
-| snat to 1.2.3.4 | # Source NAT |
-| dnat to 192.168.1.10 | # Destination NAT |
-| masquerade |# Dynamic SNAT |
+| snat to 1.2.3.4 |  Source NAT |
+| dnat to 192.168.1.10 |  Destination NAT |
+| masquerade | Dynamic SNAT |
 
-| # Packet modification |
+|  Packet modification | |
 | --------|----------|
-| meta mark set 0x123 | # Set packet mark |
-| meta priority set 0 | # Set priority |
+| meta mark set 0x123 |  Set packet mark |
+| meta priority set 0 |  Set priority |
 
-| # Rate limiting |
+|  Rate limiting | |
 | --------|----------|
-| limit rate 10/minute | # Basic rate limiting |
-| limit rate over 100/minute drop | # Burst protection |
+| limit rate 10/minute |  Basic rate limiting |
+| limit rate over 100/minute drop |  Burst protection |
 
-| # Advanced actions |
+|  Advanced actions | |
 | --------|----------|
-| queue | # Send to userspace |
-| dup to device eth1 | # Duplicate packet |
+| queue |  Send to userspace |
+| dup to device eth1 |  Duplicate packet |
 
 > [!IMPORTANT]
-> **Actividad** 
-> * Crea una regla que acepte las conexiones _ssh_ del interfaz _eth0_
-> * Crea una regla que permita el tráfico entre el interfaz enp2s0 y enp1s0
-> * Crea un conjunto denominado _inernal_nets_ con varias redes ipv4
-> * Crea una regla que acepte las conexiones ip provenientes del conjunto _internal_nets_ creado en el paso anterior.
-> * Crea una regla que aplique _masquerade_ a los paquetes salitenes por el interfaz "eth0"
-> * Crea una regla que aplique _masquerade_ a los paquetes salitenes por el interfaz "eth0" y provenientes del conjunto _internal_nets_
-> * El servidor _ldap_ se encuentra en la ip 10.10.10.11. Haz _port-forwarding_ si el paquete proviene de la interfaz "wan" y va dirigido al puerto usado por el servicio _ldap_
-> * Crea una regla que cambie la dirección de destino a 10.1.0.10 si el paquete va dirigido a los puertos 80 o 443
-> * Crea una regla que accepte las conexiones cuyo esado sea _new_, _established_ o _related_.
-> * Crea una regla para que el servidor web únicamente acepte 100 paquetes por minuto y ráfagas cortas de 200.
-> * Crea una regla que deniege las conexiones cuyo estado sea _invalid_.
-> * Crea una regla para que el servidor _ssh_ acepte únicamente 50 paquetes por minuto.
-> * Crea una regla para que los paquetes _ssh_ descartados se registren con el prefijo _"SSH rate limit exceeded: "_.
-> * Crea un conjunto denominado _port_scanners_ e incluye varias ip de ejemplo
-> * Referencia el conjunto anterior en una regla que deniege el acceso si proviene de alguna de las ips del conjunto.
-> * Crea una cadena denominada _input_wan_ que permita el tráfico _icmp_ de tipo _echo-request_ y el _udp_ dirigido al puerto 68 (DHCP). Deniega el resto
-> * Crea en una tabla denominada _asir2_table_ una cadena_base denominada _asir2_input_ asocianda al punto (hook) input. Para todo el tráfico proveniente del interfaz "eth0" salta a la cadena creada en el paso anterior.
+> **Actividad II. Reglas nftables** 
+> 1. Crea una regla que acepte las conexiones _ssh_ del interfaz _eth0_
+> 2. Crea una regla que permita el tráfico entre el interfaz enp2s0 y enp1s0
+> 3. Crea un conjunto denominado _inernal_nets_ con varias redes ipv4
+> 3. Crea una regla que acepte las conexiones ip provenientes del conjunto _internal_nets_ creado en el paso anterior.
+> 3. Crea una regla que aplique _masquerade_ a los paquetes salitenes por el interfaz "eth0"
+> 3. Crea una regla que aplique _masquerade_ a los paquetes salitenes por el interfaz "eth0" y provenientes del conjunto _internal_nets_
+> 3. El servidor _ldap_ se encuentra en la ip 10.10.10.11. Haz _port-forwarding_ si el paquete proviene de la interfaz "wan" y va dirigido al puerto usado por el servicio _ldap_
+> 3. Crea una regla que cambie la dirección de destino a 10.1.0.10 si el paquete va dirigido a los puertos 80 o 443
+> 3. Crea una regla que accepte las conexiones cuyo esado sea _new_, _established_ o _related_.
+> 3. Crea una regla para que el servidor web únicamente acepte 100 paquetes por minuto y ráfagas cortas de 200.
+> 3. Crea una regla que deniege las conexiones cuyo estado sea _invalid_.
+> 3. Crea una regla para que el servidor _ssh_ acepte únicamente 50 paquetes por minuto.
+> 3. Crea una regla para que los paquetes _ssh_ descartados se registren con el prefijo _"SSH rate limit exceeded: "_.
+> 3. Crea un conjunto denominado _port_scanners_ e incluye varias ip de ejemplo
+> 3. Referencia el conjunto anterior en una regla que deniege el acceso si proviene de alguna de las ips del conjunto.
+> 3. Crea una cadena denominada _input_wan_ que permita el tráfico _icmp_ de tipo _echo-request_ y el _udp_ dirigido al puerto 68 (DHCP). Deniega el resto
+> 3. Crea en una tabla denominada _asir2_table_ una cadena_base denominada _asir2_input_ asocianda al punto (hook) input. Para todo el tráfico proveniente del interfaz "eth0" salta a la cadena creada en el paso anterior.
 
 
 #### Añadir, insertar y eliminar reglas
@@ -214,11 +229,11 @@ nft delete rule inet filter input handle 178
 ```
 
 > [!IMPORTANT]
-> **Actividad** 
-> A partir del siguiente [fichero](https://raw.githubusercontent.com/ASIR2-SGD/asir2-sgd.github.io/refs/heads/main/resources/files/nft-incus.txt) de reglas usadas por el servidor _incus_
-> Analiza las reglas indicando y enumerando el número de cadenas y tablas
-> Explica a modo general y usando un lenguaje natural las reglas de la cadena _in.incusbr0_
-> Explica en el contexto el propósito de la única regla en la cadena pstrt.incusbr0
+> **Actividad III. Estudio reglas nft-incus** 
+> 1. A partir del siguiente [fichero](https://raw.githubusercontent.com/ASIR2-SGD/asir2-sgd.github.io/refs/heads/main/resources/files/nft-incus.txt) de reglas usadas por el servidor _incus_
+> 2. Analiza las reglas indicando y enumerando el número de cadenas y tablas
+> 3. Explica a modo general y usando un lenguaje natural las reglas de la cadena _in.incusbr0_
+> 4. Explica en el contexto el propósito de la única regla en la cadena pstrt.incusbr0
 
 
 
@@ -227,7 +242,7 @@ nft delete rule inet filter input handle 178
 Para llevar a cabo la práctica necesitamos tres contenedores (_firewall_ , _lan1_ y _lan2_) y un switch virtual (_ovs-br0_)
 
 > [!IMPORTANT]
-> **Actividad** 
+> **Actividad IV. Diagrama de red** 
 > Dibuja un diagrama de red del escenario propuesto, indicando los interfaces e ip's
 
 
@@ -236,8 +251,7 @@ Crea el cortafuegos y añadele un segundo interfaz de red denominado _lan_, reno
 ```bash
 $ incus launch images:ubuntu/noble firewall
 $ incus config device override firewall eth0 name=wan
-$ incus config device set firewall eth1 name=lan
-$ incus config device add firewall lan nic nictype=bridged parent=ovs-br0
+$ incus config device add firewall eth1 nic name=lan nictype=bridged parent=ovs-br0
 # Aprovisionamiento básico del firewall
 $ incus exec firewall -- bash -c 'apt-get update && apt-get -y install  aptitude wget bash-completion nano xsel vim dnsmasq nftables' 
 $ incus exec firewall -- bash -c 'systemctl enable nftables.service'
@@ -246,11 +260,11 @@ $ incus launch images:ubuntu/noble lan1 --network ovs-br0
 ```
 
 > [!IMPORTANT]
-> **Actividad** 
-> * El interfaz _eth1_ que conecta con la LAN tiene que tener una ip estática, lleva a cabo la configuración de red apropiada para dicha interfaz y aplicando los cambios mediante la utilidad _netplan_. 
-> La ip para el interfaz _eth1_ debe ser 10.10.82.1. 
-> Los cambios en la configuración de red se llevarán a cabo editando el fichero _/etc/netplan/10-lxc.yaml_
-> * El _firewall_ deberá implementar funcionalidad DHCP para proveer a sus clientes LAN de ip dinámica. Lleva a cabo la configuración del servidor DHCP usando _dnsmasq_.
+> **Actividad V. Firewall config** 
+> 1. El interfaz _eth1_ que conecta con la LAN tiene que tener una ip estática. Lleva a cabo la configuración de red apropiada para dicha interfaz y aplicando los cambios mediante la utilidad _netplan_. 
+> 	* La ip para el interfaz _lan(eth1)_ debe ser 10.10.82.1. 
+>	* Los cambios en la configuración de red se llevarán a cabo creando un nuevo fichero (básate en _/etc/netplan/10-lxc.yaml_) _/etc/netplan/20-firewall.yaml
+> 2. El _firewall_ deberá implementar funcionalidad DHCP para proveer a sus clientes LAN de ip dinámica. Lleva a cabo la configuración del servidor DHCP usando _dnsmasq_.
 > Lleva a cabo la configuración y comprueba que los clientes LAN obtienen una ip de la red 10.10.82/0
 
 > [!WARNING]
@@ -268,25 +282,45 @@ Hacemos el cambio persistente editando el fichero _/etc/sysctl.conf_ y descoment
 firewall# vi /etc/sysctl.conf
 28 net.ipv4.ip_forward=1
 ```
-Reiniciar el servicio _systemd-sysctl_
+Aplica los cambios reiniciando el servicio _systemd-sysctl_
 ```bash
 firewall# systemctl restart systemd-sysctl.service 
 ```
 
 
-
 > [!IMPORTANT]
-> **Actividad** 
-> En este momento, y aunque hemos configurado el _firewall_ como enroutador, no es posible salir a _internet_ con los clientes lan. Analiza y entiendo el problema llevando a cabo las modificaciones necesaris en las reglas del _firewall_ para permitir la salida de los clientes al exterior.
-> * Comprueba que los clientes _lan_ obtienen ip del _firewall_ en la red apropiada.
-> * Comprueba que en un principo no pueden salir al exterior
-> * Añade las reglas apropiadas el _firewall_ para permitir a los clienes salir al exterior
+> **Actividad VI. Firewall config II** 
+> En este momento, y aunque hemos configurado el _firewall_ como enroutador, **no** es posible salir a _internet_ con los clientes lan. Analiza y entiende el problema llevando a cabo las modificaciones necesarias en las reglas del _firewall_ para permitir la salida de los clientes al exterior.
+> 2. Comprueba que los clientes _lan_ obtienen ip del _firewall_ en la red apropiada.
+> 2. Comprueba que en un principo no pueden salir al exterior
+> 1. ¿Porqué los clientes aunque obtienen ip y hemos activado el contenedor como enrutador no pueden acceder a la wan?
+> 3. Añade las reglas apropiadas el _firewall_ para permitir a los clienes acceder a la wan
+> 4. **TODO** Mejorar reglas firewall
+
+### Entrega
+Envia un documento _pdf_ firmado (creado con _markdown_) con los siguientes apartados
+* Actividades propuestas, indicando los comandos o ficheros de configuración modificados.
+* Respuestas a las preguntas y ejercicios.
+
+### Propuestas de mejora
+Las siguientes propuestas de mejora de la práctica se plantean al alumno como reto para que mejore sus destrezas y conocimientos de las herramientas de administrdor de sistemas y mejore **notablemente** su nota de la asignatura.
+
+* **Mejora I-** Automatiza la creación y configuración del escenario propuesto para el la práctica que has llevado a cabo mediante el uso de un fichero _Taskfile.yml_ 
+
+* **Mejora II-**Basándote en la mejora anterior, utiliza la herramienta _ansible_ para automatizar el proceso de configuración del escenario de la práctica.
 
 
+## Actividad 2. DMZ
+Una DMZ Zona Desmilitarizada) es una red perimetral segura y aislada en una infraestructura de red, diseñada para alojar servidores y servicios que necesitan ser accesibles desde Internet (como servidores web, de correo, DNS) sin comprometer la seguridad de la red interna (LAN).
+
+* Añade una tercera interfaz denominada _dmz(eth2)_ con la ip 10.10.100.1/24
+* Crea un servidor web de prueba o utiliza uno ya existente y modifica la configuración de red para conectarlo a la red DMZ (deberas usar un switch virtual obs-br1)
+* Evita las conexiones entre DMZ y LAN pero no entre LAN y DMZ
+* Las conexiones provenientes de wan al puerto 80,433 deben redirigirse al servidor web (DNAT)
+* **TODO**
 
 
-## Actividad 2. OpenWRT
-
+## Actividad 3. OpenWRT
 
 
 ### Firewall - Reglas
@@ -301,8 +335,8 @@ firewall# systemctl restart systemd-sysctl.service
 - [ ] Las peticiones provenientes del exterior al puerto 80/443 (http/s) serán redirigidas al servidor web de la _dmz_
 
 
->[!Tip]
->Se metódico y cuidadoso a la hora de establecer las reglas. Crea un fichero (script) bien documentado con a medida que vas añadiendolas. Comprueba el efecto de cada una y ejecuta los _tests_ de regresión para verificar que las reglas añadidas no rompen el estado anterior.
+> [!TIP]
+> Se metódico y cuidadoso a la hora de establecer las reglas. Crea un fichero (script) bien documentado con a medida que vas añadiendolas. Comprueba el efecto de cada una y ejecuta los _tests_ de regresión para verificar que las reglas añadidas no rompen el estado anterior.
 
 
 
