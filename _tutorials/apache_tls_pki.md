@@ -177,6 +177,11 @@ Crea un Anexo denominado _Anexo I. Ficheros de configuración_ y añade el conte
 Utiliza el formato _markdown_ adecuado para tener un documento estructurado y legible.
 * Comprueba el correcto funcionamiento de la actividad mediante la ejecución exitosa de los tests
 
+### Propuestas de mejora
+Las siguientes propuestas de mejora de la práctica se plantean al alumno como reto para que mejore sus destrezas y conocimientos de las herramientas de administrdor de sistemas y mejore su nota en la asignatura.
+
+* **Mejora I-** Automatiza la creación y configuración del escenario propuesto para el la práctica que has llevado a cabo mediante el uso de un fichero _Taskfile.yml_ 
+
 
 ## Links
 * [Autoridades certificadorase](https://devopscube.com/create-self-signed-certificates-openssl/)
