@@ -129,11 +129,20 @@ klist -ke /etc/krb5.keytab
 
 5. _¿Explica el comando ktadd y situalo en el contexto de la práctica?,¿Por qué hay que usarlo?_
 6. _¿Dentro del contexto de kerberos, que es un SPN, enumero un SPN usado en la práctica?_
+7. _Dentro del contexto de kerberos, define y ejemplifica con tus propias palabras los siguietes términos. Busca una analogia del mundo real asociando los términos:_
+	* TGS 
+	* TGT
+	* TS
+	* AS
 
 
 ## Entrega
 * Entrega un documento **estructurado** con una breve explicación(función) de los comando usados para la configuración tanto del cliente como del servidor así como de los pasos llevados a cabo para la comprobación de correcto funcionamiento de la actividad.
 * Completa el documento con un diagrama de red **hecho  a mano** de la red de la actividad.
+* Completa el documento con un diagrama temporal **hecho a mano**, similar al estudiado en clase que explique de forma gráfica los pasos para autenticarse mediante el protocolo _kerberos_ a un servicio. 
+	* La clave del usuario es de color naranja
+	* La clave del servicio (MySql) es de color morado
+	* Enumera los pasos llevados a cabo y una breve explicación de lo que hace cada uno y que se obtiene.
 * Completa el documento con anexos de los ficheros de configuración (sin comentario ni espacios en blanco) usados.
 * Responde a las preguntas propuestas durante la realización de la práctica.
 
