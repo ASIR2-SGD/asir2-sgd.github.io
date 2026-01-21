@@ -34,7 +34,7 @@ ___
 
 > 1. Crea la red krb-net
 > 2. Crea las instancias necesarias
-> 2. Crea,configura y compreuba el correcto funcionamiento del servidor dns para la red krb-net.
+> 2. Crea,configura y comprueba el correcto funcionamiento del servidor dns para la red krb-net.
 > 3. Configurar el KDC añadiendo los prear, modificar y activar tu web site basándote en el fichero existente _/etc/apache/sites-available/default-ssl.conf_
 > 4. ....
 
@@ -66,19 +66,161 @@ $ incus network create krb-net \
       ipv4.address=10.144.144.1/24 \
       ipv6.address=none ipv4.nat=true \
       ipv4.dhcp.ranges=10.144.144.100-10.144.144.200 \
-      dns.nameservers=<ip-dns-server> \
-      dns.domain=asir2.grao
+      dns.nameservers=10.144.144.2 \
+      dns.search=asir2.grao
 ```
 
-**DNS** 
+### DNS
+En el apartado anterior hemos creado la red _asir2.grao(10.144.144.0/24)_. Para el correcto funcionamiento de _kerberos_ es necesario disponer de un servidor DNS para dicha zona correctamente configurado. Este, tal y como le hemos indicando tiene una ip fija 10.144.144.2 que es la que que el servidor DHCP (10.144.144.1) pasará a sus clientes entre otros parámetros de red.
+Será necesarios configurar el fichero _/etc/netplan/10-lxc.yaml_
 
 ```bash
 $ incus launch images:ubuntu/noble dnssrv --network krb-net
+```
+
+Modifica la configuración de red del servidor dns y asignale una dirección fija
+```bash
+#/etc/netplan/10-lxc.yaml
+network:
+  version: 2
+  ethernets:
+    eth0:
+      dhcp4: false
+      dhcp-identifier: mac
+      addresses: [10.144.144.2/24]
+      nameservers:
+        addresses: [10.144.144.2]
+        search: [asir2.grao]
+      routes:
+        - to : default
+          via: 10.144.144.1                           
+```
+
+Aplica los cambios mediante el comando _netplan apply_
+Es necesario instalar en nuestro servidor de nombres de la zona _asir2.grao_ el paquete _bind9_ enre otras utilidades para que este actue como tal.
+Nuestra configuración actual que podemos obtenerla mediante el comando _resolvectl status_ indica que el servidor de nombres para resolver nombres de domino es el mismo, por lo que es el pez que se muerde la cola.
+
+> [!TIP]
+> Podemos asignar de forma temporal un servidor de nombres para poder instalar los paquetes mediante el comando _resolvectl dns eth0 10.144.144.1_
+
+Intala los paquetes necesarios.
+```bash
 $ incus exec dnssrv -- bash -c 'apt-get update && apt-get -y install  aptitude wget bind9 dnsutils bash-completion nano xsel vim'
 ```
-Modifica la configuración de red del servidor dns y asignale una dirección fija
 
-[Configurar dns]((https://documentation.ubuntu.com/server/how-to/networking/install-dns/#install-dns))
+**Responde:**
+
+1. _¿Qué serie de pruebas has llevado a cabo para concluir que es la configuración del servidor de nombres la que no es correcta para poder instalar los paquetes, indica los comandos?_
+2. _¿Quién es 10.144.144.1?,¿Por que lo has asignado como servidor de nombres?,¿Qué otras funciones tiene?_
+3. _¿Habría funcionado si huberamos puesto los servidores de google 8.8.8.8 como servidores de nombre en nuestra configuración?. ¿Explica el motivo?_
+
+Vamos ahora a configurar nuestro servidor de nombres para que sea responsable de la zona _asir2.grao_, esto quiere decir que es él quien tiene la responsabilidad de devolver la _ip_ correspondiente a las peticiones dentro del dominio _asir2.grao_.
+Nuestro servidor de nombres actua como _caching nameserver_. Las peticiones que este no sepa resolver deberá reenviarlas a otro servidor de nombres.
+
+> [!NOTE]
+> Las siguientes indicaciones están basada sen el [tutorial](https://documentation.ubuntu.com/server/how-to/networking/install-dns/#install-dns) de configuración del servicio DNS de ubuntu. Se recomienda consultarlas para cualquier duda o aclaración.
+
+```bash
+#/etc/bind/named.conf.options
+options {
+    forwarders {
+        10.144.144.1;        
+    };
+};
+```
+
+
+
+
+A continuación configuramos nuestro servidor como servidor primario de la zona a administrar _asir2.grao_
+
+```bash
+#/etc/bind/named.conf.local
+zone "asir2.grao" {
+    type master;
+    file "/etc/bind/db.asir2.grao";
+};
+```
+
+Creamos los registros para la zona
+
+```bash
+#/etc/bind/db.asir2.grao
+;
+; BIND data file for asir2.grao
+;
+$TTL    604800
+@       IN      SOA     asir2.grao. root.asir2.grao. (
+                              2         ; Serial
+                         604800         ; Refresh
+                          86400         ; Retry
+                        2419200         ; Expire
+                         604800 )       ; Negative Cache TTL
+
+@       IN      NS      ns.asir2.grao.
+@       IN      A       10.144.144.2
+ns      IN      A       10.144.144.2
+#---------------
+#Place your records here
+#--------------
+```
+
+**Responde:**
+
+4. _¿Qué es un _caching nameserver_ indica las características frente a un _DNS forwarder_
+5. _¿Por que has indicando 10.144.144.1 como forwarders?. ¿Qué otros valores sería correcto poner?_
+6. _¿Investiga cual es el servidor de nombres del IES?, ¿Qué comando has utilizado para saberlo?_
+7. _Explica con tus propias palabras el siguiente registro_
+>```@       IN    NS     ns.example.com.```
+
+
+Para la resolución inversa (ip -> name)
+```bash
+#/etc/bind/named.conf.local
+zone "144.144.10-in-addr.arpa" {
+    type master;
+    file "/etc/bind/db.144.144.10";
+};
+```
+
+```bash
+#/etc/bind/db.10.144.144
+;
+; BIND data file for 10.144.144
+;
+$TTL    604800
+@       IN      SOA     ns.asir2.grao. root.asir2.grao. (
+                              2         ; Serial
+                         604800         ; Refresh
+                          86400         ; Retry
+                        2419200         ; Expire
+                         604800 )       ; Negative Cache TTL
+
+@       IN      NS      ns.
+2       IN      PTR 	ns.asir2.grao
+#---------------
+#Place your records here
+#--------------
+```
+
+**Testeando el servidor DNS**
+
+Es fundamental aprender a testear y comprobar las cosas y no dejar nada al libre albedrio, que será en un alto porcentaje susceptible de fallos y problemas.
+
+Una herramienta muy util para realiza consultas a un servidor de nobres es **dig**
+```bash
+dig @10.144.144.2 kdc.asir2.grao A
+dig @10.144.144.2 asir2.grao SOA
+dig @10.144.144.2 asir2.grao NS
+``` 
+
+Para verifira si nuestro fichero de zona es correcto y se carga correctamente podemos utilizar el comando _named-checkzone_
+**Responde:**
+
+8. _Ejecuta y explica que hacen las consultad del comando dig anteriores_
+9. _¿A que servidor de nombres realizamos la consulta si omitimos el parámetro @10.144.144.2?_
+10. _Investiga sobre el comando [_named-checkzone_](https://documentation.ubuntu.com/server/how-to/networking/install-dns/#named-checkzone)e indica el comando que ejecutarías para verificar que el fichero de zona asir2.grao es correcto_
+
 
 ## Kerberos 
 [Guía instalación y configuración kerberos server](https://documentation.ubuntu.com/server/how-to/kerberos/install-a-kerberos-server/)
@@ -107,11 +249,11 @@ root@kdc-client:~# klist
 
 **Responde:**
 
-1. _¿Qué diferencias hay entre el comando kadmin.local y kadmin?,¿Por qué esa diferenciación?_
-2. _¿Qué hace el comando `addprinc`?
-3. _¿Para que sirve el fichero /etc/krb5kdc/kadm5.acl? ¿Que significado tiene la regla?_
+11. _¿Qué diferencias hay entre el comando kadmin.local y kadmin?,¿Por qué esa diferenciación?_
+12. _¿Qué hace el comando `addprinc`?_
+13. _¿Para que sirve el fichero /etc/krb5kdc/kadm5.acl? ¿Que significado tiene la regla?_
 >```*/admin@EXAMPLE.COM    *```
-4. _Explica con tus propias palabra que hace el comando kinit y el comando klist_
+14. _Explica con tus propias palabra que hace el comando kinit y el comando klist_
 
 
 ### Servidor SSH Kerberizado
@@ -127,9 +269,9 @@ klist -ke /etc/krb5.keytab
 ```
 **Responde:**
 
-5. _¿Explica el comando ktadd y situalo en el contexto de la práctica?,¿Por qué hay que usarlo?_
-6. _¿Dentro del contexto de kerberos, que es un SPN, enumero un SPN usado en la práctica?_
-7. _Dentro del contexto de kerberos, define y ejemplifica con tus propias palabras los siguietes términos. Busca una analogia del mundo real asociando los términos:_
+15. _¿Explica el comando ktadd y situalo en el contexto de la práctica?,¿Por qué hay que usarlo?_
+16. _¿Dentro del contexto de kerberos, que es un SPN, enumero un SPN usado en la práctica?_
+17. _Dentro del contexto de kerberos, define y ejemplifica con tus propias palabras los siguietes términos. Busca una analogia del mundo real asociando los términos:_
 	* TGS 
 	* TGT
 	* TS
@@ -164,6 +306,7 @@ Las siguientes propuestas de mejora de la práctica se plantean al alumno como r
 * [Configuring OpenSSH to use Kerberos Authentication](https://www.kevindiaz.dev/blog/configuring-openssh-to-use-kerberos-authentication.html)
 * [How to Integrate LDAP and Kerberos](https://www.linuxtoday.com/blog/integrate-ldap-kerberos/)
 * [Kerberizando SSH en Linux](https://juanjoselo.wordpress.com/2018/02/18/kerberizando-ssh-en-linux/)
+* [Domain Name Service (DNS)](https://documentation.ubuntu.com/server/how-to/networking/install-dns/#install-dns)
 
 
 
@@ -185,8 +328,8 @@ Las siguientes propuestas de mejora de la práctica se plantean al alumno como r
 ```bash
 incus network set incusbr0 dns.domain asir2.grao
 getent hosts 10.149.165.99 
-resolvectl dns <network_bridge> <dns_address>
-resolvectl domain <network_bridge> ~<dns_domain>
+resolvectl dns <network interface> <dns_address>
+resolvectl domain <network interfacee> ~<dns_domain>
 
 /usr/sbin/sshd -d -d -d -p 2223
 ssh -vv ubuntu@ssh-server.asir2.grao -p 2223
