@@ -64,10 +64,10 @@ Las máquinas _KDC_, _krb-cli_ y _ssh-server_ están en la red _krb-net_. La res
 ```bash
 $ incus network create krb-net \
       ipv4.address=10.144.144.1/24 \
-      ipv6.address=none ipv4.nat=true \ 
-      ipv4.dhcp.ranges = 10.144.144.100-10.144.144.100 \
-      dns.nameservers = <ip-dns-server> \
-      dns.domain = asir2.grao
+      ipv6.address=none ipv4.nat=true \
+      ipv4.dhcp.ranges=10.144.144.100-10.144.144.200 \
+      dns.nameservers=<ip-dns-server> \
+      dns.domain=asir2.grao
 ```
 
 **DNS** 
@@ -133,6 +133,7 @@ klist -ke /etc/krb5.keytab
 
 ## Entrega
 * Entrega un documento **estructurado** con una breve explicación(función) de los comando usados para la configuración tanto del cliente como del servidor así como de los pasos llevados a cabo para la comprobación de correcto funcionamiento de la actividad.
+* Completa el documento con un diagrama de red **hecho  a mano** de la red de la actividad.
 * Completa el documento con anexos de los ficheros de configuración (sin comentario ni espacios en blanco) usados.
 * Responde a las preguntas propuestas durante la realización de la práctica.
 
