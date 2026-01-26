@@ -28,6 +28,8 @@ Kerberos es un protocolo de autenticación de red que permite a usuarios y servi
 ___
 ![Kerberos protocol 2]({% link /resources/img/Kerberos01.png %})
 
+![Kerberos protocol 3](https://www.varonis.com/hubfs/Imported_Blog_Media/Kerberos-Graphics-1-v2-787x790.jpg)
+
 
 ## Actividad I. Autenticación en un servidr ssh mediante kerberos
 ### Guión esquemático

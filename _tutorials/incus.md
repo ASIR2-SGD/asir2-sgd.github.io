@@ -248,7 +248,7 @@ $ incus profile add profile <instance> X11
 ```
 * Activar X11 socket y display
 ```bash
-incus exec <instance> -- bash -c 'cat >> /etc/profile << EOF
+incus exec <instance> -- bash -c 'cat > /etc/profile.d/lxc-x11.sh << EOF
 export DISPLAY=:0
 export PULSE_SERVER=/mnt/pulse.sock
 export export XDG_SESSION_TYPE=x11
