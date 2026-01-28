@@ -126,6 +126,8 @@ $ incus network create asirnetwork \
 $ incus network attach <network> <instance> [<device_name>] [<interface_name>]
 $ incus config device add <instance_name> <device_name> nic network=<network_name>
 $ incus network delete <network>
+$ incus config device set <instance> eth0 ipv4.address=x.x.x.x
+
 ```
 **Ejemplos**
 * Crea red _LAN_ (192.168.82.0/24)
@@ -135,6 +137,12 @@ $ incus network create LAN \
 	 ipv6.address=none ipv4.nat=true \
 	 ipv4.dhcp.ranges=192.168.82.150-192.168.82.220
 ```
+
+* Cambiar la ip de una instancia
+```bash
+$ incus config device set <instance> eth0 ipv4.address=x.x.x.x
+```
+
 * Asocia network _LAN_ con nuevo interfaz _eth2_
 ```bash
 $ incus network attach LAN c1 eth2
@@ -274,9 +282,6 @@ wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
 sudo apt -y install ./google-chrome-stable_current_amd64.deb
 ```
 Para comprobar el correcto funcionamiento de los gráficos podemos utilizar las utilidades _xclock_ _glxgears_. Para el audio _speaker-test_
-
-
-
 
 
 

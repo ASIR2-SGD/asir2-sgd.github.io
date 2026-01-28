@@ -45,7 +45,7 @@ Crea una red denominada krb-net para experimentar y aprender el funcionamiento d
 
 | Realm | Primary KDC | User principal | Admin principal |
 | ----------|----------| ----------| ------------|
-| ASIR2.GRAO | kdc01.asir2.grao | ubuntu | ubuntu/admin |
+| ASIR2.GRAO | kdc.asir2.grao | ubuntu | ubuntu/admin |
 
 ### Escenario en Incus
 Para llevar a cabo la práctica, deberemos construir el siguiente escenario con contenedores
@@ -79,8 +79,8 @@ Será necesarios configurar el fichero _/etc/netplan/10-lxc.yaml_
 ```bash
 $ incus launch images:ubuntu/noble dnssrv --network krb-net
 ```
+Asigna una ip fija al servidor DNS, puedes hacerlo modificando el fichero _/etc/netplan/10-lxc.yaml_
 
-Modifica la configuración de red del servidor dns y asignale una dirección fija
 ```bash
 #/etc/netplan/10-lxc.yaml
 network:
@@ -97,8 +97,15 @@ network:
         - to : default
           via: 10.144.144.1                           
 ```
-
 Aplica los cambios mediante el comando _netplan apply_
+
+Tambíen puedes asignar una ip fija en _incus_ con el siguiente comando
+```bash
+$incus config device set dnssrv eth0 ipv4.address=10.144.144.2
+```
+
+
+
 Es necesario instalar en nuestro servidor de nombres de la zona _asir2.grao_ el paquete _bind9_ enre otras utilidades para que este actue como tal.
 Nuestra configuración actual que podemos obtenerla mediante el comando _resolvectl status_ indica que el servidor de nombres para resolver nombres de domino es el mismo, por lo que es el pez que se muerde la cola.
 
@@ -152,7 +159,7 @@ Creamos los registros para la zona
 ; BIND data file for asir2.grao
 ;
 $TTL    604800
-@       IN      SOA     asir2.grao. root.asir2.grao. (
+@       IN      SOA     ns.asir2.grao. admin.asir2.grao. (
                               2         ; Serial
                          604800         ; Refresh
                           86400         ; Retry
@@ -191,7 +198,7 @@ zone "144.144.10-in-addr.arpa" {
 ; BIND data file for 10.144.144
 ;
 $TTL    604800
-@       IN      SOA     ns.asir2.grao. root.asir2.grao. (
+@       IN      SOA     ns.asir2.grao. admin.asir2.grao. (
                               2         ; Serial
                          604800         ; Refresh
                           86400         ; Retry
@@ -209,11 +216,19 @@ $TTL    604800
 
 Es fundamental aprender a testear y comprobar las cosas y no dejar nada al libre albedrio, que será en un alto porcentaje susceptible de fallos y problemas.
 
-Una herramienta muy util para realiza consultas a un servidor de nobres es **dig**
+Una herramienta muy util para realiza consultas a un servidor de nobres es **dig**  o **nslookup**
 ```bash
 dig @10.144.144.2 kdc.asir2.grao A
 dig @10.144.144.2 asir2.grao SOA
 dig @10.144.144.2 asir2.grao NS
+nslookup dnssrv.asir2.grao
+nslookup ssh-server.asir2.grao
+nslookup krb-cli.asir2.grao
+##TESTEAR RESOLUCIÓN INVERSA
+nslookup 10.144.144.2
+nslookup <ip_kdc>
+nslookup <ip_ssh-server>
+
 ``` 
 
 Para verifira si nuestro fichero de zona es correcto y se carga correctamente podemos utilizar el comando _named-checkzone_
@@ -225,28 +240,107 @@ Para verifira si nuestro fichero de zona es correcto y se carga correctamente po
 
 
 ## Kerberos 
-[Guía instalación y configuración kerberos server](https://documentation.ubuntu.com/server/how-to/kerberos/install-a-kerberos-server/)
-### KDC 
+### Instalación y configuración del servidor Kerberos(KDC)
 
 ```bash
 $ incus launch images:ubuntu/noble kdc --network krb-net
-$ incus exec kdc -- bash -c 'apt-get update && apt-get -y install  aptitude wget krb5-kdc krb5-admin-server bash-completion nano xsel vim' 
+$ incus exec kdc -- bash -c 'apt-get update && apt-get -y install  aptitude wget krb5-kdc krb5-admin-server dnsutils bash-completion nano xsel vim' 
 ```
+Al instalar el paquete _krb5-kdc_ se nos pedira que introduzcamos información.
+* REALM : ASIR2.GRAO
+* Kerberos servers for your realm: kdc.asir2.grao
+* kd
+![kdc-install01]({% link /resources/img/kdc_install01.png %})
+
+Una vez instalado, será necesario configurar el servidor kerberos.
+
+Creamos el _realm_ y la base de datos de _principals_
+```
+$ krb5_newrealm
+```
+
+Creemos nuestro primer _principal_. Puesto que no hay ninguno creado deberemos usar la utilidad _kadmin.local_ que usa un socket UNIX local para hablar con el KDC y requiere privilegios de root
+
+```bash
+$ sudo kadmin.local
+Authenticating as principal root/admin@ASIR.GRAO with password.
+kadmin.local: addprinc ubuntu
+WARNING: no policy specified for ubuntu@ASIR.GRAO; defaulting to no policy
+Enter password for principal "ubuntu@ASIR.GRAO": 
+Re-enter password for principal "ubuntu@ASIR.GRAO": 
+Principal "ubuntu@ASIR.GRAO" created.
+kadmin.local: quit
+```
+
+Para poder usar _kadmin_ de forma remota deberemos crear un _principal_ administrador. Por convenio se suguiera que se utilice el tipo _admin_, de esta forma podemos crear reglas ACL genéricas de forma mas fácil.
+
+```bash
+$ sudo kadmin.local
+Authenticating as principal root/admin@ASIR2.GRAO with password.
+kadmin.local: addprinc ubuntu/admin
+WARNING: no policy specified for ubuntu/admin@ASIR2.GRAO; defaulting to no policy
+Enter password for principal "ubuntu/admin@ASIR2.GRAO": 
+Re-enter password for principal "ubuntu/admin@ASIR2.GRAO": 
+Principal "ubuntu/admin@ASIR2.GRAO" created.
+kadmin.local: quit
+```
+
+A continuación, asignamos los permisos apropiados al usuario admin en el fichero _/etc/krb5kdc/kadm5.acl_:
+
+```bash
+ubuntu/admin@ASIR2.GRAO        *
+```
+
+Comprobamos que efectivamente podemos logearnos con el usuario _ubuntu/admin_ 
+```bash
+$ubuntu kadmin -p ubuntu/admin
+kadmin: quit
+```
+Y solictar un tiquet TGT
+```bash
+$ubuntu kinit -p ubuntu/admin
+$klist 
+Ticket cache: FILE:/tmp/krb5cc_0
+Default principal: ubuntu/admin@ASIR2.GRAO
+
+Valid starting       Expires              Service principal
+01/28/2026 15:44:49  01/29/2026 15:44:49  krbtgt/ASIR2.GRAO@ASIR2.GRAO
+
+```
+
+
+> [!NOTE]
+> Las indicaciones anteriores se han basado en el siguiente [tutorial](https://documentation.ubuntu.com/server/how-to/kerberos/install-a-kerberos-server/) de ubuntu. Revisalo en caso de tener problemas con la configuración del servidor kerberos.
+
+
 
 > [!WARNING]
 > Kerberos confia en la resolución de nombres, por lo que es importante tener un servidor _DNS_ correctamente configurado y con los registros necesarios para el correcto funcionamiento del _KDC_.
+
 
 > [!TIP]
 > _kinit_ inspecciona el fichero _/etc/krb5.conf_ para encontra con que _KDC_ contactar. Esto tiene el inconveniente que en un despliege con cientos de clientes, si modificamos la ip del _KDC_ deberemos reflejar ese cambio en el fichero. El _KDC_ puede ser encontrado via busquedas DNS, para ello debes añadir registros _TXT_ y _SRV_ a tu servidor de nombres.
 > Mejora tu calificación llevando la mejora mencionada.
 
 
-### krb-cli
+### Instalación y configuración del cliente
 ```bash
 $ incus launch images:ubuntu/noble krb-cli --network krb-net
-$ incus exec krb-cli -- bash -c 'apt-get update && apt-get -y install  aptitude wget krb5-user krb5-config bash-completion nano xsel vim'
+$ incus exec krb-cli -- bash -c 'apt-get update && apt-get -y install  aptitude wget krb5-user dnsutils krb5-config bash-completion nano xsel vim'
+```
+Completamos la instalación del paquete krb5-user introduciendo los valores para el REALM y el KDC
+
+Comprobamos el correcto funcionamiento solicitando un tiquet
+```bash
 root@kdc-client:~# kinit ubuntu
 root@kdc-client:~# klist
+Password for ubuntu@ASIR22.GRAO: 
+root@krb-cli2:~# klist
+Ticket cache: FILE:/tmp/krb5cc_0
+Default principal: ubuntu@ASIR2.GRAO
+
+Valid starting       Expires              Service principal
+01/28/2026 15:51:09  01/29/2026 15:51:09  krbtgt/ASIR2.GRAO@ASIR2.GRAO
 ```
 
 **Responde:**
@@ -258,17 +352,62 @@ root@kdc-client:~# klist
 14. _Explica con tus propias palabra que hace el comando kinit y el comando klist_
 
 
-### Servidor SSH Kerberizado
+### Instalación y configuración dels servidor SSH Kerberizado
 ```bash
 $ incus launch images:ubuntu/noble ssh-server --network krb-net
-$ incus exec ssh-server -- bash -c 'apt-get update && apt-get -y install krb5-user krb5-config openssh-server aptitude wget bash-completion nano xsel vim'
+$ incus exec ssh-server -- bash -c 'apt-get update && apt-get -y install dnsutils krb5-user krb5-config openssh-server aptitude wget bash-completion nano xsel vim'
+```
+
+Al igual que el cliene completaos la instalación del paquete krb5-user introduciendo los valores para el REALM y el KDC y verificamos que podemos conectarnos con el servidor _kdc_
+```bash
 root@ssh-server-k:~# kinit ubuntu/admin
 root@ssh-server-k:~# klist
-root@ssh-server-k:~# kadmin
-kadmin: add_principal -randkey host/ssh-server.asir2.grao@ASIR2.GRAO
+```
+
+Debemos crear un _principal_ para nuestro servidor ssh en el _kdc_ y exportar la clave que está en la base de datos a un fichero en el servidor ssh
+```bash
+root@ssh-server:~# kadmin
+kadmin: addprinc -randkey host/ssh-server.asir2.grao@ASIR2.GRAO
+kadmin: listprincs
+host/ssh-server.asir2.grao@ASIR2.GRAO
+[..]
+ubuntu/admin@ASIR2.GRAO
+ubuntu@ASIR2.GRAO
+
+##El comando ktadd copia la clave existente en la base de datos del _kdc_ al fichero /etc/krb5.ketyab necesaria para validar los tiquets
+##presentados por el cliente
 kadmin: ktadd host/ssh-server.asir2.grao
+kadmin: quit
 klist -ke /etc/krb5.keytab 
 ```
+
+
+#### Kerberiza el servidor ssh
+Debemos configurar el servicio ssh para que este acepte tiquets presentados por el cliente.
+
+
+> [!WARNING]
+> Muy importante(Motivo por el que a algunos no les funcionaba correctamente) es asignar a nuestra servidor ssh el nombre completo FQDN, puesto que el servicio ssh se basa en este para buscar el _principal_ en la base de datos del _kdc_ utilizaremos el comando expuesto abajo para establecer el nombre completo. 
+```bash
+hostnamectl set-hostname ssh-server2.asir2.grao
+```
+
+Edita en el servidor ssh el fichero _/etc/ssh/sshd_config_ y modifica
+```bash
+#/etc/ssh/sshd_config
+GSSAPIAuthentication yes
+GSSAPICleanupCredentials yes
+GSSAPIStrictAcceptorCheck yes
+```
+
+Edita el fichero _/etc/ssh/ssh_config_ en el **cliente krb-cli**
+```bash
+#/etc/ssh/ssh_config
+GSSAPIAuthentication yes
+GSSAPIDelegateCredentials no
+```
+
+
 **Responde:**
 
 15. _¿Explica el comando ktadd y situalo en el contexto de la práctica?,¿Por qué hay que usarlo?_
@@ -333,6 +472,7 @@ getent hosts 10.149.165.99
 resolvectl dns <network interface> <dns_address>
 resolvectl domain <network interfacee> ~<dns_domain>
 
+#DEBUG
 /usr/sbin/sshd -d -d -d -p 2223
 ssh -vv ubuntu@ssh-server.asir2.grao -p 2223
 ```
