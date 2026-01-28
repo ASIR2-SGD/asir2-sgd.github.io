@@ -212,6 +212,9 @@ $TTL    604800
 #--------------
 ```
 
+> [!WARNING]
+> Para el correcto funcionamiento de Kerberos es necesario tener un servidor _DNS_ correctamente configurado y con los registros necesarios.
+
 **Testeando el servidor DNS**
 
 Es fundamental aprender a testear y comprobar las cosas y no dejar nada al libre albedrio, que será en un alto porcentaje susceptible de fallos y problemas.
@@ -249,12 +252,13 @@ $ incus exec kdc -- bash -c 'apt-get update && apt-get -y install  aptitude wget
 Al instalar el paquete _krb5-kdc_ se nos pedira que introduzcamos información.
 * REALM : ASIR2.GRAO
 * Kerberos servers for your realm: kdc.asir2.grao
-* kd
+* kdc admin server: kdc.asir2.grao
+
 ![kdc-install01]({% link /resources/img/kdc_install01.png %})
 
 Una vez instalado, será necesario configurar el servidor kerberos.
 
-Creamos el _realm_ y la base de datos de _principals_
+Creamos el _realm_ y la base de datos de nuestros _principals_
 ```
 $ krb5_newrealm
 ```
@@ -272,7 +276,7 @@ Principal "ubuntu@ASIR.GRAO" created.
 kadmin.local: quit
 ```
 
-Para poder usar _kadmin_ de forma remota deberemos crear un _principal_ administrador. Por convenio se suguiera que se utilice el tipo _admin_, de esta forma podemos crear reglas ACL genéricas de forma mas fácil.
+Para poder usar _kadmin_ de forma remota deberemos crear un _principal_ administrador. Por convenio se sugiere que se utilice el tipo _admin_, de esta forma podemos crear reglas ACL genéricas de forma mas fácil.
 
 ```bash
 $ sudo kadmin.local
@@ -314,9 +318,6 @@ Valid starting       Expires              Service principal
 
 
 
-> [!WARNING]
-> Kerberos confia en la resolución de nombres, por lo que es importante tener un servidor _DNS_ correctamente configurado y con los registros necesarios para el correcto funcionamiento del _KDC_.
-
 
 > [!TIP]
 > _kinit_ inspecciona el fichero _/etc/krb5.conf_ para encontra con que _KDC_ contactar. Esto tiene el inconveniente que en un despliege con cientos de clientes, si modificamos la ip del _KDC_ deberemos reflejar ese cambio en el fichero. El _KDC_ puede ser encontrado via busquedas DNS, para ello debes añadir registros _TXT_ y _SRV_ a tu servidor de nombres.
@@ -352,19 +353,20 @@ Valid starting       Expires              Service principal
 14. _Explica con tus propias palabra que hace el comando kinit y el comando klist_
 
 
-### Instalación y configuración dels servidor SSH Kerberizado
+### Instalación y configuración del servidor SSH Kerberizado
 ```bash
 $ incus launch images:ubuntu/noble ssh-server --network krb-net
 $ incus exec ssh-server -- bash -c 'apt-get update && apt-get -y install dnsutils krb5-user krb5-config openssh-server aptitude wget bash-completion nano xsel vim'
+$ incus exec ssh-server -- bash -c 'systemctl enable sshd.service'
 ```
 
-Al igual que el cliene completaos la instalación del paquete krb5-user introduciendo los valores para el REALM y el KDC y verificamos que podemos conectarnos con el servidor _kdc_
+Al igual que el cliene completamos la instalación del paquete _krb5-user_ introduciendo los valores para el REALM y el KDC y verificamos que podemos conectarnos con el servidor _kdc_
 ```bash
 root@ssh-server-k:~# kinit ubuntu/admin
 root@ssh-server-k:~# klist
 ```
 
-Debemos crear un _principal_ para nuestro servidor ssh en el _kdc_ y exportar la clave que está en la base de datos a un fichero en el servidor ssh
+Debemos crear un _principal_ del servidor ssh en la base de datos del _kdc_ y exportar dicha clave en un fichero que guardaremos en el servidorr ssh para que _kerberos_ haga uso del mismo.
 ```bash
 root@ssh-server:~# kadmin
 kadmin: addprinc -randkey host/ssh-server.asir2.grao@ASIR2.GRAO
@@ -387,12 +389,14 @@ Debemos configurar el servicio ssh para que este acepte tiquets presentados por 
 
 
 > [!WARNING]
-> Muy importante(Motivo por el que a algunos no les funcionaba correctamente) es asignar a nuestra servidor ssh el nombre completo FQDN, puesto que el servicio ssh se basa en este para buscar el _principal_ en la base de datos del _kdc_ utilizaremos el comando expuesto abajo para establecer el nombre completo. 
+> Muy importante(Motivo por el que a algunos no les funcionaba correctamente) es asignar a nuestra servidor ssh el nombre completo FQDN, puesto que el servicio ssh se basa en este para generar el SPN que busca a posteriori en la base de datos de contraseñas del _kdc_. 
+
+Utilizaremos el siguiente comando para establecer el nombre completo. 
 ```bash
 hostnamectl set-hostname ssh-server2.asir2.grao
 ```
 
-Edita en el servidor ssh el fichero _/etc/ssh/sshd_config_ y modifica
+Edita en el **servidor ssh** el fichero _/etc/ssh/sshd_config_ y modifica
 ```bash
 #/etc/ssh/sshd_config
 GSSAPIAuthentication yes
@@ -400,7 +404,7 @@ GSSAPICleanupCredentials yes
 GSSAPIStrictAcceptorCheck yes
 ```
 
-Edita el fichero _/etc/ssh/ssh_config_ en el **cliente krb-cli**
+Edita en el **cliente krb-cli** fichero _/etc/ssh/ssh_config_ 
 ```bash
 #/etc/ssh/ssh_config
 GSSAPIAuthentication yes
@@ -417,6 +421,27 @@ GSSAPIDelegateCredentials no
 	* TGT
 	* TS
 	* AS
+
+#### Comprobación y depuración
+
+Comprueba el correcto funcioamiento de la actividad solicitando desde el cliente un _tiquet_ y accediendo al servidor _ssh_ al cual debes acceder sin necesitdad de introducir contraseña.
+```bash
+krb-cli$ kinit ubuntu
+krb-cli$ ssh ubuntu@ssh-server.asir2.grao
+```
+
+**Depuración**
+En caso de que la práctica no funciona como fuera de esperar es conveniente consutar los mensajes de depuración tanto del cliente como del servidor.
+Ejecuta en el servidor el servicio sshd en modo _debug_ (muestra mensajes adicionales en la salida estandar) en un puerto diferente.
+```bash
+ssh-server$ /usr/sbin/sshd -d -d -d -p 2223
+```
+Y en el cliente conectate activando tambien el modo _debug_ al nuevo puerto del servidor ssh.
+```bash
+krb-cli$ ssh -vv ubuntu@ssh-server.asir2.grao -p 2223
+```
+
+Observa los mensajes de ambos programas para obtener más información de por que _kerberos_ no es capaz de autenticarse de forma correcta.
 
 
 ## Entrega
@@ -471,8 +496,4 @@ incus network set incusbr0 dns.domain asir2.grao
 getent hosts 10.149.165.99 
 resolvectl dns <network interface> <dns_address>
 resolvectl domain <network interfacee> ~<dns_domain>
-
-#DEBUG
-/usr/sbin/sshd -d -d -d -p 2223
-ssh -vv ubuntu@ssh-server.asir2.grao -p 2223
 ```
