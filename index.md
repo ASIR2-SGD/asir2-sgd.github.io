@@ -23,6 +23,7 @@
 * [Kerberos]({% link _tutorials/Kerberos.md %})
 ## Firewall
 * [Netfilter/Openwrt]({% link _tutorials/Firewall.md %})
+
 ## VPN
 * [Tunneling]({% link _tutorials/Tunneling.md %})
 * [VPN]({% link _tutorials/VPN.md %})
@@ -41,6 +42,11 @@
 * [Mimir config file]({% link _extra/mimir_config.md %})
 * [Cloud init example]({% link _extra/profile-cloud-init.md %})
 
-### Anexo II. Misc
+### Anexo II. HOWTOs
 * [sshfs mount config]({% link _extra/sshfs.md %})
+* [Opensense]({% link _extra/opensense.md %})
+* [OpenWrt]({% link _extra/openwrt.md %})
+* [OpenVirtual Switch (OVS)]({% link _extra/ovs-incus.md %})
+
+
 

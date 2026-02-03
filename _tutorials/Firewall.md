@@ -50,8 +50,10 @@ Para el correcto manejo de nftables, es necesario entender su estructura básica
 ![Essential Nfttables ruleset ](https://thermalcircle.de/lib/exe/fetch.php?w=700&tok=277ef3&media=linux:nf-hooks-nftables-ex2.png)
 
 ### Contrack: Seguimiento de paquetes
+
 >[!NOTE]
-TCP es un protocolo basado en conexión, por lo que una conexión ESTABLISHED esta bien definida. UDP es un protocolo no orientado a conexión, por lo que ESTABLISHED hace referencia a tráfico que ha tenido una respuesta y viceversa.
+>TCP es un protocolo basado en conexión, por lo que una conexión ESTABLISHED esta bien definida. UDP es un protocolo no orientado a 
+>conexión, por lo que ESTABLISHED hace referencia a tráfico que ha tenido una respuesta y viceversa.
 
 ![iptables_conntrack_2]({% link /resources/img/iptables_conntrack_2.png %})
 
@@ -299,33 +301,25 @@ En este momento, y aunque hemos configurado el _firewall_ como enroutador, **NO*
 Las respuestas de las siguiente reglas se deben de acompañar con el comando y breve explicación que verifique que efectivamente, la regla tiene el efecto deseado.
 - [ ] Aplicar una política restrictiva a la cadena input/output/forward
 - [ ] Permitir el tráfico desde el interfaz loopback
+- [ ] Con el objetivo de permitir los servicios mínimos, en el cortafuegos, permite el tráfico entrante para: 
+	* ICMP
+	* _ssh_
+	* Peticiones DHCP
+	* Peticiones DNS	
 - [ ] Con el objetivo de permitir los servicios mínimos, en el cortafuegos, permite el tráfico saliente para: 
 	* Actualizaciones del sistema 
-	* Peticiones DHCP
-	* Conexiones _ssh_ establecidas
-- [ ] Al cortafuegos únicamente tendrá acceso mediante _ssh_ el ordenador cliente (lan1)
+	* Peticiones DNS
+	* Conexiones _legítimas_ (established, related)
+	* ICMP
 - [ ] Permitir que atraviese (forward) el cortafuegos únicamente el trafico proveniende de la LAN
 
-### Entrega
-Envia un documento _pdf_ firmado (creado con _markdown_) con los siguientes apartados
-* Diagrama lógico de red *hecho a mano* indicando las redes existentes(id.red/máscara) ip's e interfaces de red
-* Explicación y comando cuando así lo requiera del comando ejecutado con alguna finalidad
-* Respuestas a las preguntas planteadas.
-* Anexos con los ficheros de configuración más relevantes usados en la práctica.
-
-### Propuestas de mejora
-Las siguientes propuestas de mejora de la práctica se plantean al alumno como reto para que mejore sus destrezas y conocimientos de las herramientas de administrdor de sistemas y mejore **notablemente** su nota de la asignatura.
-
-* **Mejora I-** Automatiza la creación y configuración del escenario propuesto para el la práctica que has llevado a cabo mediante el uso de un fichero _Taskfile.yml_ 
-
-* **Mejora II-**Basándote en la mejora anterior, utiliza la herramienta _ansible_ para automatizar el proceso de configuración del escenario de la práctica.
 
 
 ## Actividad 2. DMZ
 Una DMZ Zona Desmilitarizada) es una red perimetral segura y aislada en una infraestructura de red, diseñada para alojar servidores y servicios que necesitan ser accesibles desde Internet (como servidores web, de correo, DNS) sin comprometer la seguridad de la red interna (LAN).
 
 * Añade una tercera interfaz denominada _dmz(eth2)_ con la ip 10.10.100.1/24
-* Crea un servidor web de prueba o utiliza uno ya existente y modifica la configuración de red para conectarlo a la red DMZ (deberas usar un switch virtual obs-br1)
+* Crea un servidor web de prueba o utiliza uno ya existente y modifica la configuración de red para conectarlo a la red DMZ (deberas usar un switch virtual ovs-br1)
 
 A las reglas del cortafuegos del ejercicio anterior, añade las siguientes relacionadas con la seguridad del la zona DMZ
 * No se permite ningún tráfico entre la LAN y DMZ excepto el trafico HTTP/S
@@ -333,8 +327,26 @@ A las reglas del cortafuegos del ejercicio anterior, añade las siguientes relac
 * Se permite el tráfico _ssh_ hacia el servidor _web_ provieniente únicamente del cliente _lan1_
 * Las conexiones provenientes de wan al puerto 80,433 deben redirigirse al servidor web (DNAT)
 
+### Entrega
+Envia un documento _pdf_ firmado (creado con _markdown_) con los siguientes apartados
+* Diagrama lógico de red *hecho a mano* indicando las redes existentes(id.red/máscara) ip's e interfaces de red
+* Comandos y breve explicación cuando así lo requiera, ejecutados.
+* Respuestas a las preguntas planteadas.
+* Anexos con los ficheros de configuración más relevantes usados en la práctica.
 
-## Actividad 3. OpenWRT
+
+### Propuestas de mejora
+Las siguientes propuestas de mejora de la práctica se plantean al alumno como reto para que mejore sus destrezas y conocimientos de las herramientas de administrdor de sistemas y mejore **notablemente** su nota de la asignatura.
+
+* **Mejora I-** Automatiza la creación y configuración del escenario propuesto para el la práctica 1 que has llevado a cabo mediante el uso de un fichero _Taskfile.yml_ 
+* **Mejora II-** Amplia y experimenta tus conocimientos instalando y configurando en un entorno virtual igual al propuesto el cortafuegos basado en FreeBSD, Opensense. Puedes encontrar los pasos esquematizados en la sección extra de los apuntes
+* **Mejora III-**Basándote en la mejora anterior, utiliza la herramienta _ansible_ para automatizar el proceso de configuración del escenario de la práctica.
+
+
+---
+[NO TERMINADA]
+
+## Actividad 3. OpenWRT 
 
 
 ### Firewall - Reglas

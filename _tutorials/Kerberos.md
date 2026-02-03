@@ -393,7 +393,7 @@ Debemos configurar el servicio ssh para que este acepte tiquets presentados por 
 
 Utilizaremos el siguiente comando para establecer el nombre completo. 
 ```bash
-hostnamectl set-hostname ssh-server2.asir2.grao
+hostnamectl set-hostname ssh-server.asir2.grao
 ```
 
 Edita en el **servidor ssh** el fichero _/etc/ssh/sshd_config_ y modifica
